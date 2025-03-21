@@ -11,10 +11,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Link href="/">
-            <a className="flex items-center">
+            <div className="flex items-center cursor-pointer">
               <div className="text-primary text-3xl mr-2">⚡</div>
               <h1 className="text-3xl font-bold text-primary">HustleHub</h1>
-            </a>
+            </div>
           </Link>
         </div>
         <h2 className="mt-6 text-center text-2xl font-bold text-gray-900">

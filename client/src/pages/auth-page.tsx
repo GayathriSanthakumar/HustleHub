@@ -116,15 +116,15 @@ export default function AuthPage() {
     // This would be handled in the registration mutation's onSuccess callback in a production app
   }
 
-  // Redirect if user is already logged in
-  if (user) {
-    return user.userType === "business" ? <Redirect to="/business-dashboard" /> : <Redirect to="/user-dashboard" />;
-  }
-
   // Update form defaults when registration type changes
   useEffect(() => {
     registerForm.setValue("userType", registrationType);
   }, [registrationType, registerForm]);
+
+  // Make sure to redirect AFTER all hooks are called
+  if (user) {
+    return user.userType === "business" ? <Redirect to="/business-dashboard" /> : <Redirect to="/user-dashboard" />;
+  }
 
   return (
     <AuthLayout>

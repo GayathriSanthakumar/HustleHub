@@ -100,24 +100,24 @@ export function DashboardLayout({ children, title, userType }: DashboardLayoutPr
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <Link href="/">
-                  <a className="flex items-center">
+                  <div className="flex items-center cursor-pointer">
                     <div className="text-primary text-3xl mr-2">⚡</div>
                     <h1 className="text-xl font-bold text-primary">HustleHub</h1>
-                  </a>
+                  </div>
                 </Link>
               </div>
               <nav className="hidden md:ml-6 md:flex md:space-x-8">
                 {navItems.map((item) => (
                   <Link key={item.href} href={item.href}>
-                    <a
+                    <div
                       className={`${
                         item.active
                           ? "border-primary text-gray-900"
                           : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer`}
                     >
                       {item.title}
-                    </a>
+                    </div>
                   </Link>
                 ))}
               </nav>
@@ -180,24 +180,24 @@ export function DashboardLayout({ children, title, userType }: DashboardLayoutPr
                     <div className="flex flex-col space-y-2 mt-4">
                       {navItems.map((item) => (
                         <Link key={item.href} href={item.href}>
-                          <a
+                          <div
                             className={`${
                               item.active
                                 ? "bg-primary/10 text-primary"
                                 : "text-gray-600 hover:bg-gray-100"
-                            } flex items-center px-3 py-2 rounded-md text-sm font-medium`}
+                            } flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer`}
                             onClick={() => setIsMobileNavOpen(false)}
                           >
                             {item.icon}
                             {item.title}
-                          </a>
+                          </div>
                         </Link>
                       ))}
                       <Link href="/">
-                        <a className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100" onClick={() => setIsMobileNavOpen(false)}>
+                        <div className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileNavOpen(false)}>
                           <Home className="h-5 w-5 mr-2" />
                           Home
-                        </a>
+                        </div>
                       </Link>
                       <button
                         className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100"
