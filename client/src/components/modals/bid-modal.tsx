@@ -1,0 +1,173 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { insertBidSchema } from "@shared/schema";
+
+const bidFormSchema = insertBidSchema.extend({
+  amount: z.coerce.number().min(1, "Bid amount must be at least ₹1"),
+  details: z.string().min(10, "Details must be at least 10 characters"),
+  deliveryTime: z.string().min(1, "Please select a delivery time"),
+});
+
+type BidFormValues = z.infer<typeof bidFormSchema>;
+
+interface BidModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  itemId: number;
+  itemType: "job" | "product";
+  itemName: string;
+  itemDescription: string;
+}
+
+export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDescription }: BidModalProps) {
+  const { toast } = useToast();
+
+  const form = useForm<BidFormValues>({
+    resolver: zodResolver(bidFormSchema),
+    defaultValues: {
+      itemId,
+      itemType,
+      amount: 0,
+      details: "",
+      deliveryTime: "",
+    },
+  });
+
+  const bidMutation = useMutation({
+    mutationFn: async (values: BidFormValues) => {
+      const response = await apiRequest("POST", "/api/bids", values);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Bid placed successfully",
+        description: "Your bid has been submitted to the customer",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/business"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/bids/item/${itemId}/${itemType}`] });
+      onClose();
+      form.reset({
+        itemId,
+        itemType,
+        amount: 0,
+        details: "",
+        deliveryTime: "",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to place bid",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  function onSubmit(values: BidFormValues) {
+    bidMutation.mutate(values);
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Place a Bid</DialogTitle>
+          <DialogDescription>
+            Provide your bid details for this {itemType}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mb-4">
+          <h4 className="text-md font-medium text-gray-900">{itemName}</h4>
+          <p className="text-sm text-gray-600 mt-1">{itemDescription}</p>
+        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your Bid Amount (₹)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="e.g. 1500"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="details"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Details</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe the product or service you are offering"
+                      rows={4}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="deliveryTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estimated Delivery Time</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select delivery time" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="1-2 days">1-2 days</SelectItem>
+                      <SelectItem value="3-5 days">3-5 days</SelectItem>
+                      <SelectItem value="1-2 weeks">1-2 weeks</SelectItem>
+                      <SelectItem value="More than 2 weeks">More than 2 weeks</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={bidMutation.isPending}>
+              {bidMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Bid"
+              )}
+            </Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
