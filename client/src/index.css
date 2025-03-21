@@ -11,3 +11,31 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Animation styles for blob effects */
+.animate-blob {
+  animation: blob 10s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+@keyframes blob {
+  0% {
+    transform: scale(1) translate(0px, 0px);
+  }
+  33% {
+    transform: scale(1.2) translate(30px, -20px);
+  }
+  66% {
+    transform: scale(0.8) translate(-20px, 20px);
+  }
+  100% {
+    transform: scale(1) translate(0px, 0px);
+  }
+}
