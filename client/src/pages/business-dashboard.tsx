@@ -33,10 +33,52 @@ export default function BusinessDashboard() {
 
   // Base path mapping
   const tabPaths = {
-    "products": "/business-dashboard",
-    "user-requests": "/business-dashboard/user-requests",
+    "jobs": "/business-dashboard",
+    "products": "/business-dashboard/products",
     "active-bids": "/business-dashboard/active-bids",
-    "jobs": "/business-dashboard/jobs" // Added jobs tab path
+    "user-requests": "/business-dashboard/user-requests"
+  };
+
+  // Load jobs
+  const { data: availableJobs, isLoading: jobsLoading } = useQuery({
+    queryKey: ["/api/jobs"],
+    queryFn: async () => {
+      const response = await fetch("/api/jobs");
+      if (!response.ok) throw new Error("Failed to fetch jobs");
+      return response.json();
+    }
+  });
+
+  // Handle bid submission
+  const handleBidSubmit = async (jobId: number, amount: number, details: string) => {
+    try {
+      const response = await fetch("/api/bids", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemId: jobId,
+          itemType: "job",
+          amount,
+          details
+        }),
+        credentials: "include"
+      });
+      
+      if (!response.ok) throw new Error("Failed to submit bid");
+      
+      toast({
+        title: "Bid submitted successfully",
+        description: "Your bid has been submitted for review",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/business"] });
+    } catch (error) {
+      toast({
+        title: "Failed to submit bid",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   // Determine active tab based on current path

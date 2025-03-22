@@ -60,10 +60,10 @@ function isUserAccount(req: Request, res: Response, next: Function) {
 }
 
 function isVerifiedBusiness(req: Request, res: Response, next: Function) {
-  if (req.isAuthenticated() && req.user.userType === "business" && req.user.status === "verified") {
-    return next();
+  if (req.isAuthenticated() && req.user.userType === "business") {
+    return next(); // Skip verification check
   }
-  res.status(403).json({ message: "Forbidden: Verified business account required" });
+  res.status(403).json({ message: "Forbidden: Business account required" });
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {

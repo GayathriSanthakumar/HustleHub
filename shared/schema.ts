@@ -49,6 +49,8 @@ export const jobs = pgTable("jobs", {
   status: text("status", { enum: itemStatuses }).notNull().default("open"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   acceptedBusinessIds: json("accepted_business_ids").default([]),
+  contactInfo: text("contact_info"),
+  radius: integer("radius").notNull().default(5),
 });
 
 // Products table

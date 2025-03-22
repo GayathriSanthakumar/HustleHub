@@ -161,17 +161,12 @@ export function JobModal() {
             />
             <FormField
               control={form.control}
-              name="locationRadius"
+              name="contactInfo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location Radius (km)</FormLabel>
+                  <FormLabel>Contact Information</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="Distance in kilometers"
-                      {...field}
-                    />
+                    <Input placeholder="Phone or email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
