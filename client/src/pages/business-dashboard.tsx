@@ -19,7 +19,8 @@ import {
   Tag, 
   User, 
   ArrowRight, 
-  Check
+  Check,
+  Briefcase
 } from "lucide-react";
 
 export default function BusinessDashboard() {
@@ -34,13 +35,15 @@ export default function BusinessDashboard() {
   const tabPaths = {
     "products": "/business-dashboard",
     "user-requests": "/business-dashboard/user-requests",
-    "active-bids": "/business-dashboard/active-bids"
+    "active-bids": "/business-dashboard/active-bids",
+    "jobs": "/business-dashboard/jobs" // Added jobs tab path
   };
 
   // Determine active tab based on current path
   const getInitialTab = () => {
     if (location === "/business-dashboard/user-requests") return "user-requests";
     if (location === "/business-dashboard/active-bids") return "active-bids";
+    if (location === "/business-dashboard/jobs") return "jobs"; // Added jobs tab check
     return "products";
   };
 
@@ -76,6 +79,16 @@ export default function BusinessDashboard() {
         credentials: "include"
       });
       if (!response.ok) throw new Error("Failed to fetch active bids");
+      return response.json();
+    }
+  });
+
+  // Placeholder for job data (replace with actual API call)
+  const { data: jobs, isLoading: jobsLoading } = useQuery({
+    queryKey: ["/api/jobs/business"],
+    queryFn: async () => {
+      const response = await fetch("/api/jobs/business", { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch jobs");
       return response.json();
     }
   });
@@ -124,6 +137,7 @@ export default function BusinessDashboard() {
           <TabsTrigger value="products">Your Products</TabsTrigger>
           <TabsTrigger value="user-requests">User Requests</TabsTrigger>
           <TabsTrigger value="active-bids">Active Bids</TabsTrigger>
+          <TabsTrigger value="jobs">Available Jobs</TabsTrigger> {/* Added Jobs tab */}
         </TabsList>
 
         {/* Products Tab */}
@@ -132,7 +146,7 @@ export default function BusinessDashboard() {
             <h2 className="text-xl font-semibold text-gray-900">Your Products</h2>
             <BusinessProductModal />
           </div>
-          
+
           {productsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -187,7 +201,7 @@ export default function BusinessDashboard() {
               />
             </div>
           </div>
-          
+
           {requestsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -239,7 +253,7 @@ export default function BusinessDashboard() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Your Active Bids</h2>
           </div>
-          
+
           {bidsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -297,6 +311,34 @@ export default function BusinessDashboard() {
                 </ul>
               </div>
             </Card>
+          )}
+        </TabsContent>
+
+        {/* Jobs Tab (Placeholder) */}
+        <TabsContent value="jobs" className="space-y-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Available Jobs</h2>
+          </div>
+          {jobsLoading ? (
+            <div className="flex justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !jobs || jobs.length === 0 ? (
+            <div className="text-center p-12 border rounded-lg bg-gray-50">
+              <p className="text-gray-500">No jobs found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {/*  Replace with actual job display logic */}
+              {jobs.map((job) => (
+                <Card key={job.id} className="bg-white overflow-hidden shadow rounded-lg">
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-medium text-gray-900">{job.title}</h3>
+                    <p className="mt-2 text-sm text-gray-600 line-clamp-3">{job.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </TabsContent>
       </Tabs>

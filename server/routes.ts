@@ -399,6 +399,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!["pending", "accepted", "rejected"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
+
+      const bid = await storage.getBid(id);
+      if (!bid) {
+        return res.status(404).json({ message: "Bid not found" });
+      }
+
+      // Update job's accepted business IDs when accepting bid
+      if (status === "accepted") {
+        const job = await storage.getJob(bid.itemId);
+        if (job) {
+          const acceptedIds = job.acceptedBusinessIds || [];
+          acceptedIds.push(bid.businessId);
+          await storage.updateJobAcceptedBusinesses(job.id, acceptedIds);
+        }
+      }
       
       const bid = await storage.getBid(id);
       if (!bid) {
