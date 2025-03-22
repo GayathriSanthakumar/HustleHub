@@ -39,8 +39,8 @@ export default function BusinessDashboard() {
     "user-requests": "/business-dashboard/user-requests"
   };
 
-  // Load jobs
-  const { data: availableJobs, isLoading: jobsLoading } = useQuery({
+  // Load available jobs
+  const { data: availableJobs, isLoading: availableJobsLoading } = useQuery({
     queryKey: ["/api/jobs"],
     queryFn: async () => {
       const response = await fetch("/api/jobs");
