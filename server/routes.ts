@@ -415,17 +415,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const bid = await storage.getBid(id);
-      if (!bid) {
+      const existingBid = await storage.getBid(id);
+      if (!existingBid) {
         return res.status(404).json({ message: "Bid not found" });
       }
       
       // Determine the item to check ownership
       let item;
-      if (bid.itemType === "job") {
-        item = await storage.getJob(bid.itemId);
-      } else if (bid.itemType === "product") {
-        item = await storage.getProduct(bid.itemId);
+      if (existingBid.itemType === "job") {
+        item = await storage.getJob(existingBid.itemId);
+      } else if (existingBid.itemType === "product") {
+        item = await storage.getProduct(existingBid.itemId);
       }
       
       if (!item) {
