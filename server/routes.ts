@@ -299,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/business-products", isVerifiedBusiness, upload.single("image"), async (req, res) => {
+  app.post("/api/business-products", isBusinessAccount, upload.single("image"), async (req, res) => {
     try {
       const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
       
@@ -441,11 +441,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If bid is accepted and there are other bids, reject them
       if (status === "accepted") {
-        const otherBids = await storage.getBidsByItem(bid.itemId, bid.itemType);
-        for (const otherBid of otherBids) {
-          if (otherBid.id !== id && otherBid.status === "pending") {
-            await storage.updateBidStatus(otherBid.id, "rejected");
-          }
+        // Allow multiple bids to be accepted
+        const job = await storage.getJob(bid.itemId);
+        if (job) {
+          const acceptedIds = job.acceptedBusinessIds || [];
+          acceptedIds.push(bid.businessId);
+          await storage.updateJobAcceptedBusinesses(job.id, acceptedIds);
         }
         
         // Update item status to in_progress

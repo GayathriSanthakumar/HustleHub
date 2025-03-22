@@ -19,6 +19,7 @@ const jobFormSchema = insertJobSchema.extend({
   location: z.string().min(2, "Location is required"),
   contactInfo: z.string().min(5, "Contact information is required"),
   membersNeeded: z.coerce.number().min(1, "At least 1 member is required"),
+  locationRadius: z.number().min(0, "Radius must be non-negative").optional(), // Added locationRadius field
 });
 
 type JobFormValues = z.infer<typeof jobFormSchema>;
@@ -35,6 +36,7 @@ export function JobModal() {
       location: "",
       contactInfo: "",
       membersNeeded: 1,
+      locationRadius: 0, // Added default value for locationRadius
     },
   });
 
@@ -150,6 +152,24 @@ export function JobModal() {
                   <FormControl>
                     <Input
                       placeholder="e.g. Phone number or email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="locationRadius"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location Radius (km)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="Distance in kilometers"
                       {...field}
                     />
                   </FormControl>

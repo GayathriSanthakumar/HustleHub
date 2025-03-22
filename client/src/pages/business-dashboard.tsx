@@ -26,7 +26,7 @@ import {
 export default function BusinessDashboard() {
   const [location] = useLocation();
   const { toast } = useToast();
-  const [selectedTab, setSelectedTab] = useState<string>("products");
+  const [selectedTab, setSelectedTab] = useState<string>("jobs");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [bidModalOpen, setBidModalOpen] = useState<boolean>(false);
@@ -177,6 +177,44 @@ export default function BusinessDashboard() {
                       <Button variant="ghost" size="sm" className="flex items-center">
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
+
+        {/* Jobs Tab */}
+        <TabsContent value="jobs" className="space-y-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Available Jobs</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {jobs?.map((job) => (
+              <Card key={job.id} className="flex flex-col">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-2">{job.title}</h3>
+                  <p className="text-gray-600 mb-4">{job.description}</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{job.location} ({job.locationRadius}km)</span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="h-4 w-4" />
+                    <span>{job.membersNeeded} members needed</span>
+                  </div>
+                  <div className="mt-auto">
+                    <Button 
+                      className="w-full"
+                      onClick={() => {
+                        setSelectedItem(job);
+                        setBidModalOpen(true);
+                      }}
+                    >
+                      Bid Now (₹)
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
                       </Button>
                     </div>
                   </CardContent>
