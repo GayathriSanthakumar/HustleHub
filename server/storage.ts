@@ -27,8 +27,6 @@ export interface IStorage {
   getJob(id: number): Promise<Job | undefined>;
   createJob(job: InsertJob, userId: number): Promise<Job>;
   updateJobStatus(id: number, status: string): Promise<Job | undefined>;
-  updateJobAcceptedBusinesses(jobId: number, acceptedBusinessIds: number[]): Promise<Job | undefined>;
-  getAcceptedJobs(userId: number): Promise<Job[]>;
 
   // Products methods
   getAllProducts(): Promise<Product[]>;
@@ -118,7 +116,7 @@ export class MemStorage implements IStorage {
   async updateUserStatus(id: number, status: string): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
-
+    
     const updatedUser = { ...user, status };
     this.users.set(id, updatedUser);
     return updatedUser;
@@ -155,7 +153,7 @@ export class MemStorage implements IStorage {
 
   async createJob(job: InsertJob, userId: number): Promise<Job> {
     const id = this.jobId++;
-    const newJob: Job = { ...job, id, userId, status: "open", createdAt: new Date(), acceptedBusinessIds: [] };
+    const newJob: Job = { ...job, id, userId, status: "open", createdAt: new Date() };
     this.jobs.set(id, newJob);
     return newJob;
   }
@@ -163,24 +161,11 @@ export class MemStorage implements IStorage {
   async updateJobStatus(id: number, status: string): Promise<Job | undefined> {
     const job = this.jobs.get(id);
     if (!job) return undefined;
-
+    
     const updatedJob = { ...job, status };
     this.jobs.set(id, updatedJob);
     return updatedJob;
   }
-
-  async updateJobAcceptedBusinesses(jobId: number, acceptedBusinessIds: number[]): Promise<Job | undefined> {
-    const job = this.jobs.get(jobId);
-    if (!job) return undefined;
-    const updatedJob = { ...job, acceptedBusinessIds };
-    this.jobs.set(jobId, updatedJob);
-    return updatedJob;
-  }
-
-  async getAcceptedJobs(userId: number): Promise<Job[]> {
-    return Array.from(this.jobs.values()).filter(job => job.acceptedBusinessIds.includes(userId));
-  }
-
 
   // Products methods
   async getAllProducts(): Promise<Product[]> {
@@ -214,7 +199,7 @@ export class MemStorage implements IStorage {
   async updateProductStatus(id: number, status: string): Promise<Product | undefined> {
     const product = this.products.get(id);
     if (!product) return undefined;
-
+    
     const updatedProduct = { ...product, status };
     this.products.set(id, updatedProduct);
     return updatedProduct;
@@ -285,7 +270,7 @@ export class MemStorage implements IStorage {
   async updateBidStatus(id: number, status: string): Promise<Bid | undefined> {
     const bid = this.bids.get(id);
     if (!bid) return undefined;
-
+    
     const updatedBid = { ...bid, status };
     this.bids.set(id, updatedBid);
     return updatedBid;
