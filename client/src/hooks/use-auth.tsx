@@ -29,6 +29,7 @@ type AuthContextType = {
 type LoginData = {
   email: string;
   password: string;
+  userType?: "user" | "business"; // Optional userType parameter for login
 };
 
 type RegisterData = Omit<InsertUser, "id" | "createdAt"> & {
