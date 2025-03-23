@@ -19,32 +19,28 @@ import {
   Loader2, 
   Check, 
   X, 
-  Clock,
-  Tag
+  Clock
 } from "lucide-react";
-import { Input } from "@/components/ui/input"; // Import Input component
-
 
 export default function UserDashboard() {
   const [location] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [selectedTab, setSelectedTab] = useState<string>("browse-jobs"); // Default to browse-jobs
+  const [selectedTab, setSelectedTab] = useState<string>("service-accept");
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
 
-  // Base path mapping (updated)
+  // Base path mapping
   const tabPaths = {
-    "browse-jobs": "/user-dashboard",
-    "my-applications": "/user-dashboard/my-applications",
-    "saved-jobs": "/user-dashboard/saved-jobs"
+    "service-accept": "/user-dashboard",
+    "service-post": "/user-dashboard/service-post",
+    "product": "/user-dashboard/product"
   };
 
-  // Determine active tab based on current path (updated)
+  // Determine active tab based on current path
   const getInitialTab = () => {
-    if (location === "/user-dashboard/my-applications") return "my-applications";
-    if (location === "/user-dashboard/saved-jobs") return "saved-jobs";
-    return "browse-jobs";
+    if (location === "/user-dashboard/service-post") return "service-post";
+    if (location === "/user-dashboard/product") return "product";
+    return "service-accept";
   };
 
   // Load jobs
@@ -59,7 +55,7 @@ export default function UserDashboard() {
     }
   });
 
-  // Load user posted jobs (This remains unchanged)
+  // Load user posted jobs
   const { data: userJobs, isLoading: userJobsLoading } = useQuery({
     queryKey: ["/api/jobs/user"],
     queryFn: async () => {
@@ -71,7 +67,7 @@ export default function UserDashboard() {
     }
   });
 
-  // Load product requests (This remains unchanged)
+  // Load product requests
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["/api/products/user"],
     queryFn: async () => {
@@ -83,8 +79,7 @@ export default function UserDashboard() {
     }
   });
 
-
-  // Load bids for specific product (This remains unchanged)
+  // Load bids for specific product
   const { data: productBids, isLoading: bidsLoading } = useQuery({
     queryKey: ["/api/bids/item", selectedProductId, "product"],
     queryFn: async () => {
@@ -98,7 +93,7 @@ export default function UserDashboard() {
     enabled: !!selectedProductId
   });
 
-  // Update bid status mutation (This remains unchanged)
+  // Update bid status mutation
   const updateBidMutation = useMutation({
     mutationFn: async ({ bidId, status }: { bidId: number, status: string }) => {
       const response = await apiRequest("PATCH", `/api/bids/${bidId}/status`, { status });
@@ -120,7 +115,7 @@ export default function UserDashboard() {
     }
   });
 
-  // End product post mutation (This remains unchanged)
+  // End product post mutation
   const endPostMutation = useMutation({
     mutationFn: async (productId: number) => {
       const response = await apiRequest("PATCH", `/api/products/${productId}/status`, { status: "completed" });
@@ -143,17 +138,17 @@ export default function UserDashboard() {
     }
   });
 
-  // Handle bid action (This remains unchanged)
+  // Handle bid action
   const handleBidAction = (bidId: number, status: "accepted" | "rejected") => {
     updateBidMutation.mutate({ bidId, status });
   };
 
-  // Handle end post (This remains unchanged)
+  // Handle end post
   const handleEndPost = (productId: number) => {
     endPostMutation.mutate(productId);
   };
 
-  // Format date for display (This remains unchanged)
+  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -163,7 +158,7 @@ export default function UserDashboard() {
     });
   };
 
-  // Get status badge variant (This remains unchanged)
+  // Get status badge variant
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { variant: "default" | "secondary" | "success" | "outline" | "destructive", label: string }> = {
       "open": { variant: "success", label: "Open" },
@@ -174,21 +169,10 @@ export default function UserDashboard() {
     return statusMap[status] || { variant: "outline", label: status };
   };
 
-  // Get specific product (This remains unchanged)
+  // Get specific product
   const getProduct = (productId: number) => {
     return products?.find(p => p.id === productId);
   };
-
-  const handleSaveJob = (jobId: number) => {
-    // Implement save job logic here
-    console.log("Saving job:", jobId);
-  };
-
-  const handleApplyJob = (jobId: number) => {
-    // Implement apply job logic here
-    console.log("Applying for job:", jobId);
-  };
-
 
   return (
     <DashboardLayout title="User Dashboard" userType="user">
@@ -199,81 +183,64 @@ export default function UserDashboard() {
         className="w-full"
       >
         <TabsList className="w-full max-w-md mb-8">
-          <TabsTrigger value="browse-jobs">Browse Jobs</TabsTrigger>
-          <TabsTrigger value="my-applications">My Applications</TabsTrigger>
-          <TabsTrigger value="saved-jobs">Saved Jobs</TabsTrigger>
+          <TabsTrigger value="service-accept">Service Accept</TabsTrigger>
+          <TabsTrigger value="service-post">Service Post</TabsTrigger>
+          <TabsTrigger value="product">Product</TabsTrigger>
         </TabsList>
 
-        {/* Browse Jobs Tab */}
-        <TabsContent value="browse-jobs" className="space-y-6">
+        {/* Service Accept Tab */}
+        <TabsContent value="service-accept" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Browse Jobs</h2>
-            <Input
-              placeholder="Search jobs..."
-              className="max-w-xs"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <h2 className="text-xl font-semibold text-gray-900">Services Available</h2>
+            <JobModal />
           </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {availableJobs?.map((job) => (
-              <Card key={job.id} className="bg-white overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-                      <p className="text-sm text-gray-600">{job.companyName}</p>
+          
+          {jobsLoading ? (
+            <div className="flex justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !availableJobs || availableJobs.length === 0 ? (
+            <div className="text-center p-12 border rounded-lg bg-gray-50">
+              <p className="text-gray-500">No services available at the moment.</p>
+              <p className="text-gray-500 mt-2">Be the first to post a job!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {availableJobs.map((job) => (
+                <Card key={job.id} className="bg-white overflow-hidden shadow rounded-lg">
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-medium text-gray-900 truncate">{job.title}</h3>
+                    <div className="mt-2 flex items-center text-sm text-gray-500">
+                      <MapPin className="h-4 w-4 mr-1.5 text-gray-400" />
+                      {job.location}
                     </div>
-                    <Badge>{job.jobType}</Badge>
-                  </div>
-
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm text-gray-600">{job.description}</p>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500 flex items-center">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {job.location}
-                      </span>
-                      <span className="text-sm text-gray-500 flex items-center">
-                        <Tag className="h-4 w-4 mr-1" />
-                        {job.salary}
-                      </span>
+                    <p className="mt-3 text-sm text-gray-600 line-clamp-3">{job.description}</p>
+                    <div className="mt-4 flex items-center text-sm text-gray-500">
+                      <Users className="h-4 w-4 mr-1.5 text-gray-400" />
+                      Members needed: {job.membersNeeded}
                     </div>
-                  </div>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => handleSaveJob(job.id)}>
-                      Save
-                    </Button>
-                    <Button onClick={() => handleApplyJob(job.id)}>
-                      Apply Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="mt-4 flex justify-between">
+                      <Badge variant={getStatusBadge(job.status).variant}>
+                        {getStatusBadge(job.status).label}
+                      </Badge>
+                      <Button variant="link" size="sm" className="p-0 h-auto">
+                        View Details <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        {/* My Applications Tab (Placeholder) */}
-        <TabsContent value="my-applications">
-          <p>My Applications content will go here.</p>
-        </TabsContent>
-
-        {/* Saved Jobs Tab (Placeholder) */}
-        <TabsContent value="saved-jobs">
-          <p>Saved Jobs content will go here.</p>
-        </TabsContent>
-
-
-        {/* Service Post Tab (This remains largely unchanged) */}
+        {/* Service Post Tab */}
         <TabsContent value="service-post" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Your Posted Jobs</h2>
             <JobModal />
           </div>
-
+          
           {userJobsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -332,13 +299,13 @@ export default function UserDashboard() {
           )}
         </TabsContent>
 
-        {/* Product Tab (This remains largely unchanged) */}
+        {/* Product Tab */}
         <TabsContent value="product" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Product Requests</h2>
             <ProductModal />
           </div>
-
+          
           {productsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -383,7 +350,7 @@ export default function UserDashboard() {
             </div>
           )}
 
-          {/* Product with Bids (This remains largely unchanged) */}
+          {/* Product with Bids */}
           {selectedProductId && (
             <div className="mt-8">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Product Request Details</h3>
