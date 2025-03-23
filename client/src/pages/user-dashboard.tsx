@@ -434,9 +434,6 @@ export default function UserDashboard() {
                             </div>
                           ))}
                         </div>
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {productBids.map((bid) => (
-                              <div key={bid.id} className="bg-gray-50 p-4 rounded-lg">
                                 <div className="flex items-center justify-between">
                                   <h4 className="text-sm font-medium text-gray-900">Business ID: {bid.businessId}</h4>
                                   <span className="text-lg font-bold text-gray-900">₹{bid.amount}</span>
