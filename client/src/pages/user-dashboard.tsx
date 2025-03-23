@@ -405,20 +405,22 @@ export default function UserDashboard() {
                                     <Button 
                                       size="sm"
                                       variant="default"
+                                      className="bg-green-600 hover:bg-green-700"
                                       onClick={() => handleBidAction(bid.id, "accepted")}
                                       disabled={updateBidMutation.isPending}
                                     >
                                       <Check className="h-4 w-4 mr-1" />
-                                      Accept Bid
+                                      Accept Quote
                                     </Button>
                                     <Button 
-                                      variant="outline"
+                                      variant="outline" 
                                       size="sm"
+                                      className="text-red-600 border-red-600 hover:bg-red-50"
                                       onClick={() => handleBidAction(bid.id, "rejected")}
                                       disabled={updateBidMutation.isPending}
                                     >
                                       <X className="h-4 w-4 mr-1" />
-                                      Reject
+                                      Reject Quote
                                     </Button>
                                   </>
                                 ) : (
