@@ -17,6 +17,7 @@ export default function UserDashboard() {
   const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState<string>("browse-jobs");
   const [searchQuery, setSearchQuery] = useState("");
+  const [jobModalOpen, setJobModalOpen] = useState(false); // Added state for job modal
 
   // Base path mapping
   const tabPaths = {
@@ -143,9 +144,12 @@ export default function UserDashboard() {
         {/* Request Job Tab */}
         <TabsContent value="request-job" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Job Requests</h2>
-            <JobModal />
+            <h2 className="text-xl font-semibold text-gray-900">Your Job Requests</h2>
+            <Button onClick={() => setJobModalOpen(true)}>
+              Post a Job
+            </Button>
           </div>
+          <JobModal open={jobModalOpen} onOpenChange={setJobModalOpen} />
 
           <div className="grid grid-cols-1 gap-4">
             {userJobs?.map((job) => (
