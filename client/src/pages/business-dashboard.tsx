@@ -175,35 +175,14 @@ export default function BusinessDashboard() {
         className="w-full"
       >
         <TabsList className="w-full max-w-md mb-8">
-          <TabsTrigger value="product-requests">Product Requests</TabsTrigger>
-          <TabsTrigger value="active-bids">Active Bids</TabsTrigger>
+          <TabsTrigger value="posted-jobs">Posted Jobs</TabsTrigger>
+          <TabsTrigger value="applications">Applications</TabsTrigger>
         </TabsList>
 
-        {/* Product Requests Tab */}
-        <TabsContent value="product-requests" className="space-y-6">
+        {/* Posted Jobs Tab */}
+        <TabsContent value="posted-jobs" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Product Requests</h2>
-          </div>
-          {/* Product requests display */}
-          <div className="grid grid-cols-1 gap-4">
-            {products?.map((product) => (
-              <Card key={product.id} className="bg-white">
-                <CardContent className="p-6">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{product.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{product.description}</p>
-                    </div>
-                    <Button onClick={() => {
-                      setSelectedItem(product);
-                      setBidModalOpen(true);
-                    }}>
-                      Place Bid
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <h2 className="text-xl font-semibold text-gray-900">Your Posted Jobs</h2>
           </div>
 
           {jobsLoading ? (
@@ -228,32 +207,17 @@ export default function BusinessDashboard() {
           )}
         </TabsContent>
 
-        {/* Active Bids Tab */}
-        <TabsContent value="active-bids" className="space-y-6">
+        {/* Applications Tab */}
+        <TabsContent value="applications" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Active Bids</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Applications</h2>
           </div>
-          
-          <div className="grid grid-cols-1 gap-4">
-            {activeBids?.map((bid) => (
-              <Card key={bid.id} className="bg-white">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {bid.itemType === 'product' ? 'Product Request' : 'Job Request'}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">Bid Amount: ₹{bid.amount}</p>
-                      <p className="text-sm text-gray-600">{bid.details}</p>
-                    </div>
-                    <Badge variant={bid.status === 'accepted' ? 'success' : bid.status === 'rejected' ? 'destructive' : 'secondary'}>
-                      {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+          {/* Replace with actual application display logic */}
+          <div className="text-center p-12 border rounded-lg bg-gray-50">
+              <p className="text-gray-500">Application display logic not yet implemented.</p>
           </div>
+
         </TabsContent>
 
         {/* Active Bids Tab */}
