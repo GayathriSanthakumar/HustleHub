@@ -404,6 +404,7 @@ export default function UserDashboard() {
                                   <>
                                     <Button 
                                       size="sm"
+                                      variant="default"
                                       onClick={() => handleBidAction(bid.id, "accepted")}
                                       disabled={updateBidMutation.isPending}
                                     >
