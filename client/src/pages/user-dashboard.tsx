@@ -194,7 +194,7 @@ export default function UserDashboard() {
             <h2 className="text-xl font-semibold text-gray-900">Services Available</h2>
             <JobModal />
           </div>
-          
+
           {jobsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -240,7 +240,7 @@ export default function UserDashboard() {
             <h2 className="text-xl font-semibold text-gray-900">Your Posted Jobs</h2>
             <JobModal />
           </div>
-          
+
           {userJobsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -305,7 +305,7 @@ export default function UserDashboard() {
             <h2 className="text-xl font-semibold text-gray-900">Product Requests</h2>
             <ProductModal />
           </div>
-          
+
           {productsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -434,48 +434,10 @@ export default function UserDashboard() {
                             </div>
                           ))}
                         </div>
-                                <div className="flex items-center justify-between">
-                                  <h4 className="text-sm font-medium text-gray-900">Business ID: {bid.businessId}</h4>
-                                  <span className="text-lg font-bold text-gray-900">₹{bid.amount}</span>
-                                </div>
-                                <p className="mt-2 text-sm text-gray-600">{bid.details}</p>
-                                <p className="mt-1 text-xs text-gray-500">Delivery: {bid.deliveryTime}</p>
-                                <div className="mt-4 flex space-x-2">
-                                  {bid.status === "pending" ? (
-                                    <>
-                                      <Button 
-                                        size="sm"
-                                        onClick={() => handleBidAction(bid.id, "accepted")}
-                                        disabled={updateBidMutation.isPending}
-                                      >
-                                        <Check className="h-4 w-4 mr-1" />
-                                        Accept Bid
-                                      </Button>
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => handleBidAction(bid.id, "rejected")}
-                                        disabled={updateBidMutation.isPending}
-                                      >
-                                        <X className="h-4 w-4 mr-1" />
-                                        Reject
-                                      </Button>
-                                    </>
-                                  ) : (
-                                    <Badge variant={bid.status === "accepted" ? "success" : "destructive"}>
-                                      {bid.status === "accepted" ? (
-                                        <Check className="h-4 w-4 mr-1" />
-                                      ) : (
-                                        <X className="h-4 w-4 mr-1" />
-                                      )}
-                                      {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="mt-6 flex justify-end">
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-end">
                             <Button 
                               variant="destructive"
                               onClick={() => handleEndPost(selectedProductId)}
@@ -487,10 +449,6 @@ export default function UserDashboard() {
                               End Post
                             </Button>
                           </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
                 </Card>
               )}
             </div>
