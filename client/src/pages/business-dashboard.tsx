@@ -26,15 +26,15 @@ import {
 export default function BusinessDashboard() {
   const [location] = useLocation();
   const { toast } = useToast();
-  const [selectedTab, setSelectedTab] = useState<string>("jobs");
+  const [selectedTab, setSelectedTab] = useState<string>("posted-jobs"); // Updated default tab
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [bidModalOpen, setBidModalOpen] = useState<boolean>(false);
 
   // Base path mapping
   const tabPaths = {
-    "jobs": "/business-dashboard",
-    "products": "/business-dashboard/products",
+    "posted-jobs": "/business-dashboard",
+    "applications": "/business-dashboard/applications",
     "active-bids": "/business-dashboard/active-bids",
     "user-requests": "/business-dashboard/user-requests"
   };
@@ -63,14 +63,14 @@ export default function BusinessDashboard() {
         }),
         credentials: "include"
       });
-      
+
       if (!response.ok) throw new Error("Failed to submit bid");
-      
+
       toast({
         title: "Bid submitted successfully",
         description: "Your bid has been submitted for review",
       });
-      
+
       queryClient.invalidateQueries({ queryKey: ["/api/bids/business"] });
     } catch (error) {
       toast({
@@ -83,10 +83,9 @@ export default function BusinessDashboard() {
 
   // Determine active tab based on current path
   const getInitialTab = () => {
-    if (location === "/business-dashboard/user-requests") return "user-requests";
+    if (location === "/business-dashboard/applications") return "applications";
     if (location === "/business-dashboard/active-bids") return "active-bids";
-    if (location === "/business-dashboard/jobs") return "jobs"; // Added jobs tab check
-    return "products";
+    return "posted-jobs"; // Default to "posted-jobs"
   };
 
   // Load business products
@@ -176,89 +175,31 @@ export default function BusinessDashboard() {
         className="w-full"
       >
         <TabsList className="w-full max-w-md mb-8">
-          <TabsTrigger value="products">Your Products</TabsTrigger>
-          <TabsTrigger value="user-requests">User Requests</TabsTrigger>
-          <TabsTrigger value="active-bids">Active Bids</TabsTrigger>
-          <TabsTrigger value="jobs">Available Jobs</TabsTrigger> {/* Added Jobs tab */}
+          <TabsTrigger value="posted-jobs">Posted Jobs</TabsTrigger>
+          <TabsTrigger value="applications">Applications</TabsTrigger>
         </TabsList>
 
-        {/* Products Tab */}
-        <TabsContent value="products" className="space-y-6">
+        {/* Posted Jobs Tab */}
+        <TabsContent value="posted-jobs" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Your Products</h2>
-            <BusinessProductModal />
+            <h2 className="text-xl font-semibold text-gray-900">Your Posted Jobs</h2>
           </div>
 
-          {productsLoading ? (
+          {jobsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : !businessProducts || businessProducts.length === 0 ? (
+          ) : !jobs || jobs.length === 0 ? (
             <div className="text-center p-12 border rounded-lg bg-gray-50">
-              <p className="text-gray-500">You haven't added any products yet.</p>
-              <p className="text-gray-500 mt-2">Click the "Add Product" button to get started!</p>
+              <p className="text-gray-500">You haven't posted any jobs yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {businessProducts.map((product) => (
-                <Card key={product.id} className="bg-white overflow-hidden shadow rounded-lg">
+              {jobs.map((job) => (
+                <Card key={job.id} className="bg-white overflow-hidden shadow rounded-lg">
                   <CardContent className="p-4">
-                    {product.imagePath && (
-                      <div className="aspect-w-16 aspect-h-9 mb-4">
-                        <img 
-                          className="object-cover shadow-sm rounded-md" 
-                          src={product.imagePath} 
-                          alt={product.name} 
-                        />
-                      </div>
-                    )}
-                    <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
-                    <p className="mt-2 text-sm text-gray-600 line-clamp-3">{product.description}</p>
-                    <div className="mt-4 flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-900">₹{product.price}</span>
-                      <Button variant="ghost" size="sm" className="flex items-center">
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-
-        {/* Jobs Tab */}
-        <TabsContent value="jobs" className="space-y-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Available Jobs</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jobs?.map((job) => (
-              <Card key={job.id} className="flex flex-col">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-2">{job.title}</h3>
-                  <p className="text-gray-600 mb-4">{job.description}</p>
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>{job.location} ({job.locationRadius}km)</span>
-                  </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Users className="h-4 w-4" />
-                    <span>{job.membersNeeded} members needed</span>
-                  </div>
-                  <div className="mt-auto">
-                    <Button 
-                      className="w-full"
-                      onClick={() => {
-                        setSelectedItem(job);
-                        setBidModalOpen(true);
-                      }}
-                    >
-                      Bid Now (₹)
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-                      </Button>
-                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">{job.title}</h3>
+                    <p className="mt-2 text-sm text-gray-600 line-clamp-3">{job.description}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -266,66 +207,17 @@ export default function BusinessDashboard() {
           )}
         </TabsContent>
 
-        {/* User Requests Tab */}
-        <TabsContent value="user-requests" className="space-y-6">
+        {/* Applications Tab */}
+        <TabsContent value="applications" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">User Product Requests</h2>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input 
-                type="text" 
-                placeholder="Search requests..." 
-                className="w-64 pl-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Applications</h2>
           </div>
 
-          {requestsLoading ? (
-            <div className="flex justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : !filteredRequests || filteredRequests.length === 0 ? (
-            <div className="text-center p-12 border rounded-lg bg-gray-50">
-              <p className="text-gray-500">No product requests found.</p>
-              {searchQuery && <p className="text-gray-500 mt-2">Try a different search term.</p>}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredRequests.map((request) => (
-                <Card key={request.id} className="bg-white overflow-hidden shadow rounded-lg">
-                  <CardContent className="p-4">
-                    {request.imagePath && (
-                      <div className="aspect-w-16 aspect-h-9 mb-4">
-                        <img 
-                          className="object-cover shadow-sm rounded-md" 
-                          src={request.imagePath} 
-                          alt={request.name} 
-                        />
-                      </div>
-                    )}
-                    <h3 className="text-lg font-medium text-gray-900">{request.name}</h3>
-                    <p className="mt-2 text-sm text-gray-600 line-clamp-3">{request.description}</p>
-                    <div className="mt-4 flex justify-between items-center">
-                      <Badge variant={request.status === "open" ? "success" : "secondary"}>
-                        {request.status === "open" ? "Open for Bids" : request.status}
-                      </Badge>
-                      {request.status === "open" && (
-                        <Button 
-                          size="sm"
-                          onClick={() => handleBidClick(request)}
-                          disabled={request.status !== "open"}
-                        >
-                          Place Bid
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          {/* Replace with actual application display logic */}
+          <div className="text-center p-12 border rounded-lg bg-gray-50">
+              <p className="text-gray-500">Application display logic not yet implemented.</p>
+          </div>
+
         </TabsContent>
 
         {/* Active Bids Tab */}
@@ -391,34 +283,6 @@ export default function BusinessDashboard() {
                 </ul>
               </div>
             </Card>
-          )}
-        </TabsContent>
-
-        {/* Jobs Tab (Placeholder) */}
-        <TabsContent value="jobs" className="space-y-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Available Jobs</h2>
-          </div>
-          {jobsLoading ? (
-            <div className="flex justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : !jobs || jobs.length === 0 ? (
-            <div className="text-center p-12 border rounded-lg bg-gray-50">
-              <p className="text-gray-500">No jobs found.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {/*  Replace with actual job display logic */}
-              {jobs.map((job) => (
-                <Card key={job.id} className="bg-white overflow-hidden shadow rounded-lg">
-                  <CardContent className="p-4">
-                    <h3 className="text-lg font-medium text-gray-900">{job.title}</h3>
-                    <p className="mt-2 text-sm text-gray-600 line-clamp-3">{job.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           )}
         </TabsContent>
       </Tabs>

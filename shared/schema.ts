@@ -42,15 +42,15 @@ export const jobs = pgTable("jobs", {
   userId: integer("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   location: text("location").notNull(),
-  locationRadius: integer("location_radius").notNull(), // In kilometers
   description: text("description").notNull(),
+  salary: text("salary").notNull(),
+  jobType: text("job_type").notNull(), // "full-time", "part-time", "contract"
+  category: text("category").notNull(), // "IT", "Marketing", "Sales", etc.
+  companyName: text("company_name").notNull(),
   contactInfo: text("contact_info").notNull(),
-  membersNeeded: integer("members_needed").notNull(),
   status: text("status", { enum: itemStatuses }).notNull().default("open"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  acceptedBusinessIds: json("accepted_business_ids").default([]),
-  contactInfo: text("contact_info"),
-  radius: integer("radius").notNull().default(5),
+  applicantIds: json("applicant_ids").default([]),
 });
 
 // Products table
