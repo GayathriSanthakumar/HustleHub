@@ -365,9 +365,19 @@ export default function UserDashboard() {
                       <h3 className="text-lg leading-6 font-medium text-gray-900">
                         {getProduct(selectedProductId)?.name}
                       </h3>
-                      <Badge variant="secondary">
-                        {productBids?.length || 0} Bids Received
-                      </Badge>
+                      <div className="flex items-center gap-4">
+                        <Badge variant="secondary">
+                          {productBids?.length || 0} Bids Received
+                        </Badge>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleEndPost(selectedProductId)}
+                          disabled={endPostMutation.isPending}
+                        >
+                          End Post
+                        </Button>
+                      </div>
                     </div>
                     <p className="mt-1 max-w-2xl text-sm text-gray-500">
                       {getProduct(selectedProductId)?.description}
@@ -380,7 +390,50 @@ export default function UserDashboard() {
                           <p className="text-gray-500">No bids received yet for this product.</p>
                         </div>
                       ) : (
-                        <>
+                        <div className="grid grid-cols-1 gap-4">
+                          {productBids.map((bid) => (
+                            <div key={bid.id} className="bg-gray-50 p-4 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-medium text-gray-900">Business ID: {bid.businessId}</h4>
+                                <span className="text-lg font-bold text-gray-900">₹{bid.amount}</span>
+                              </div>
+                              <p className="mt-2 text-sm text-gray-600">{bid.details}</p>
+                              <p className="mt-1 text-xs text-gray-500">Delivery: {bid.deliveryTime}</p>
+                              <div className="mt-4 flex space-x-2">
+                                {bid.status === "pending" ? (
+                                  <>
+                                    <Button 
+                                      size="sm"
+                                      onClick={() => handleBidAction(bid.id, "accepted")}
+                                      disabled={updateBidMutation.isPending}
+                                    >
+                                      <Check className="h-4 w-4 mr-1" />
+                                      Accept Bid
+                                    </Button>
+                                    <Button 
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleBidAction(bid.id, "rejected")}
+                                      disabled={updateBidMutation.isPending}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Badge variant={bid.status === "accepted" ? "success" : "destructive"}>
+                                    {bid.status === "accepted" ? (
+                                      <Check className="h-4 w-4 mr-1" />
+                                    ) : (
+                                      <X className="h-4 w-4 mr-1" />
+                                    )}
+                                    {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {productBids.map((bid) => (
                               <div key={bid.id} className="bg-gray-50 p-4 rounded-lg">
