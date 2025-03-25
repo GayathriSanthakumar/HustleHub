@@ -512,17 +512,19 @@ export default function UserDashboard() {
                           </div>
                         </div>
                         <div className="mt-2 flex space-x-4">
-                          <Button 
-                            variant="link" 
-                            size="sm" 
-                            className="p-0 h-auto"
-                            onClick={() => {
-                              setSelectedJob(job);
-                              setEditJobDetailsOpen(true);
-                            }}
-                          >
-                            Edit Details <Edit className="h-4 w-4 ml-1" />
-                          </Button>
+                          {job.userId === user?.id && (
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              className="p-0 h-auto"
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setEditJobDetailsOpen(true);
+                              }}
+                            >
+                              Edit Details <Edit className="h-4 w-4 ml-1" />
+                            </Button>
+                          )}
                           <Button 
                             variant="link" 
                             size="sm" 
