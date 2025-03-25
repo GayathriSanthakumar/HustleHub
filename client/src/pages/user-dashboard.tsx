@@ -298,6 +298,10 @@ export default function UserDashboard() {
   // Accept business for job mutation
   const acceptBusinessMutation = useMutation({
     mutationFn: async ({ jobId, businessId }: { jobId: number, businessId: number }) => {
+      if (!currentBidId) {
+        throw new Error("Bid ID not found. Please try again.");
+      }
+      
       // Get the current job first to get existing accepted businesses
       const job = await apiRequest("GET", `/api/jobs/${jobId}`).then(res => res.json());
       
@@ -309,6 +313,7 @@ export default function UserDashboard() {
       
       console.log("Accepting business:", businessId, "for job:", jobId);
       console.log("Updated acceptedBusinessIds:", acceptedBusinessIds);
+      console.log("Updating bid status for bid ID:", currentBidId);
       
       // Update the job with the new list of accepted businesses
       const response = await apiRequest("PATCH", `/api/jobs/${jobId}/accepted-businesses`, { 
@@ -1032,10 +1037,14 @@ export default function UserDashboard() {
                               size="sm"
                               variant="default"
                               className="bg-green-600 hover:bg-green-700"
-                              onClick={() => acceptBusinessMutation.mutate({ 
-                                jobId: selectedJob?.id || 0, 
-                                businessId: bid.businessId 
-                              })}
+                              onClick={() => {
+                                // Set the current bid ID before mutation
+                                setCurrentBidId(bid.id);
+                                acceptBusinessMutation.mutate({ 
+                                  jobId: selectedJob?.id || 0, 
+                                  businessId: bid.businessId 
+                                });
+                              }}
                               disabled={acceptBusinessMutation.isPending || updateBidMutation.isPending}
                             >
                               {acceptBusinessMutation.isPending ? (
@@ -1049,11 +1058,15 @@ export default function UserDashboard() {
                               size="sm"
                               variant="outline"
                               className="border-red-600 text-red-600 hover:bg-red-50"
-                              onClick={() => updateBidMutation.mutate({ 
-                                bidId: bid.id, 
-                                status: "rejected",
-                                itemType: "job" 
-                              })}
+                              onClick={() => {
+                                // Set the current bid ID before mutation
+                                setCurrentBidId(bid.id);
+                                updateBidMutation.mutate({ 
+                                  bidId: bid.id, 
+                                  status: "rejected",
+                                  itemType: "job" 
+                                });
+                              }}
                               disabled={acceptBusinessMutation.isPending || updateBidMutation.isPending}
                             >
                               {updateBidMutation.isPending ? (
