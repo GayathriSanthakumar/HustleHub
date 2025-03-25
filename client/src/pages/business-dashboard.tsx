@@ -38,16 +38,6 @@ export default function BusinessDashboard() {
     "user-requests": "/business-dashboard/user-requests"
   };
 
-  // Load available jobs
-  const { data: availableJobs, isLoading: availableJobsLoading } = useQuery({
-    queryKey: ["/api/jobs"],
-    queryFn: async () => {
-      const response = await fetch("/api/jobs");
-      if (!response.ok) throw new Error("Failed to fetch jobs");
-      return response.json();
-    }
-  });
-
   // Handle bid submission
   const handleBidSubmit = async (jobId: number, amount: number, details: string) => {
     try {
@@ -84,7 +74,6 @@ export default function BusinessDashboard() {
   const getInitialTab = () => {
     if (location === "/business-dashboard/user-requests") return "user-requests";
     if (location === "/business-dashboard/active-bids") return "active-bids";
-    if (location === "/business-dashboard/jobs") return "jobs"; // Added jobs tab check
     return "products";
   };
 
@@ -124,15 +113,7 @@ export default function BusinessDashboard() {
     }
   });
 
-  // Placeholder for job data (replace with actual API call)
-  const { data: jobs, isLoading: jobsLoading } = useQuery({
-    queryKey: ["/api/jobs/business"],
-    queryFn: async () => {
-      const response = await fetch("/api/jobs/business", { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch jobs");
-      return response.json();
-    }
-  });
+
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -217,9 +198,6 @@ export default function BusinessDashboard() {
                       <Button variant="ghost" size="sm" className="flex items-center">
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
-
-
-
                       </Button>
                     </div>
                   </CardContent>
@@ -357,33 +335,7 @@ export default function BusinessDashboard() {
           )}
         </TabsContent>
 
-        {/* Jobs Tab (Placeholder) */}
-        <TabsContent value="jobs" className="space-y-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Available Jobs</h2>
-          </div>
-          {jobsLoading ? (
-            <div className="flex justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : !jobs || jobs.length === 0 ? (
-            <div className="text-center p-12 border rounded-lg bg-gray-50">
-              <p className="text-gray-500">No jobs found.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {/*  Replace with actual job display logic */}
-              {jobs.map((job) => (
-                <Card key={job.id} className="bg-white overflow-hidden shadow rounded-lg">
-                  <CardContent className="p-4">
-                    <h3 className="text-lg font-medium text-gray-900">{job.title}</h3>
-                    <p className="mt-2 text-sm text-gray-600 line-clamp-3">{job.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+
       </Tabs>
 
       {/* Bid Modal */}
