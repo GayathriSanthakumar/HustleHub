@@ -79,7 +79,7 @@ export default function UserDashboard() {
     return "service-accept";
   };
 
-  // Load jobs
+  // Load jobs (excluding the current user's jobs)
   const { data: availableJobs, isLoading: jobsLoading } = useQuery({
     queryKey: ["/api/jobs"],
     queryFn: async () => {
@@ -87,8 +87,11 @@ export default function UserDashboard() {
         credentials: "include"
       });
       if (!response.ok) throw new Error("Failed to fetch jobs");
-      return response.json();
-    }
+      const jobs = await response.json();
+      // Filter out jobs created by the current user
+      return jobs.filter((job: any) => job.userId !== user?.id);
+    },
+    enabled: !!user
   });
 
   // Load user posted jobs
@@ -375,7 +378,6 @@ export default function UserDashboard() {
         <TabsContent value="service-accept" className="space-y-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Services Available</h2>
-            <JobModal />
           </div>
 
           {jobsLoading ? (

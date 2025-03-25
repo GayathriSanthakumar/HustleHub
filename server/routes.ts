@@ -447,6 +447,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const bid = await storage.createBid(validatedData, req.user.id);
+      
+      // When a business applies for a job, update the job's list of applicants
+      if (validatedData.itemType === "job") {
+        try {
+          // Get current job to fetch accepted businesses list
+          const job = await storage.getJob(validatedData.itemId);
+          if (job) {
+            // Add the business ID to accepted businesses if not already there
+            const acceptedBusinessIds = Array.isArray(job.acceptedBusinessIds) ? 
+              [...job.acceptedBusinessIds] : [];
+              
+            if (!acceptedBusinessIds.includes(req.user.id)) {
+              acceptedBusinessIds.push(req.user.id);
+              
+              // Update the job with the new list of accepted businesses
+              await storage.updateJobAcceptedBusinesses(validatedData.itemId, acceptedBusinessIds);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to update job applicants:", err);
+          // Continue execution even if this fails - the bid is still created
+        }
+      }
+      
       res.status(201).json(bid);
     } catch (error) {
       if (error instanceof z.ZodError) {
