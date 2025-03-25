@@ -12,6 +12,7 @@ import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { WebSocketServer, WebSocket } from "ws";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -968,6 +969,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time chat
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store active connections with their user IDs
+  const connections = new Map<number, WebSocket>();
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    let userId: number | null = null;
+    
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle authentication message to associate connection with user
+        if (data.type === 'auth') {
+          userId = data.userId;
+          connections.set(userId, ws);
+          console.log(`User ${userId} authenticated on WebSocket`);
+          return;
+        }
+        
+        // Handle new chat message
+        if (data.type === 'chat_message' && userId) {
+          const { conversationId, content, recipientId } = data;
+          
+          if (!conversationId || !content) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Missing required fields: conversationId, content'
+            }));
+            return;
+          }
+          
+          try {
+            // Get conversation to validate user's permission
+            const conversation = await storage.getConversation(conversationId);
+            
+            if (!conversation) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Conversation not found'
+              }));
+              return;
+            }
+            
+            // Verify user is a participant in the conversation
+            if (conversation.userId !== userId && conversation.businessId !== userId) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Not authorized to send messages in this conversation'
+              }));
+              return;
+            }
+            
+            // Create message in database
+            const message = await storage.createMessage({
+              conversationId,
+              senderId: userId,
+              content,
+              readStatus: 'unread'
+            });
+            
+            // Update conversation last message time
+            await storage.updateConversationLastMessageTime(conversationId);
+            
+            // Determine recipient ID if not provided in message
+            const actualRecipientId = recipientId || 
+              (userId === conversation.userId ? conversation.businessId : conversation.userId);
+            
+            // Send message to recipient if they are connected
+            const recipientWs = connections.get(actualRecipientId);
+            if (recipientWs && recipientWs.readyState === WebSocket.OPEN) {
+              recipientWs.send(JSON.stringify({
+                type: 'new_message',
+                message,
+                conversationId
+              }));
+            }
+            
+            // Send confirmation to sender
+            ws.send(JSON.stringify({
+              type: 'message_sent',
+              message,
+              status: 'success'
+            }));
+          } catch (error) {
+            console.error('Error handling chat message:', error);
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Failed to send message'
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      if (userId) {
+        connections.delete(userId);
+        console.log(`User ${userId} disconnected from WebSocket`);
+      }
+    });
+  });
+  
   return httpServer;
 }
 
