@@ -49,7 +49,8 @@ export interface IStorage {
   getBidsByItem(itemId: number, itemType: string): Promise<Bid[]>;
   getBid(id: number): Promise<Bid | undefined>;
   createBid(bid: InsertBid, businessId: number): Promise<Bid>;
-  updateBidStatus(id: number, status: string): Promise<Bid | undefined>;
+  updateBidStatus(id: number, status: string, replacedBy?: number): Promise<Bid | undefined>;
+  reviveBid(id: number, newBidData: Partial<InsertBid>): Promise<Bid | undefined>;
 
   // Session store
   sessionStore: session.SessionStore;
@@ -276,17 +277,36 @@ export class MemStorage implements IStorage {
       id, 
       businessId, 
       status: "pending", 
-      createdAt: new Date() 
+      createdAt: new Date(),
+      imagePath: bid.imagePath || "",
+      replacedBy: undefined
     };
     this.bids.set(id, newBid);
     return newBid;
   }
 
-  async updateBidStatus(id: number, status: string): Promise<Bid | undefined> {
+  async updateBidStatus(id: number, status: string, replacedBy?: number): Promise<Bid | undefined> {
     const bid = this.bids.get(id);
     if (!bid) return undefined;
 
-    const updatedBid = { ...bid, status };
+    const updatedBid = { ...bid, status, ...(replacedBy !== undefined ? { replacedBy } : {}) };
+    this.bids.set(id, updatedBid);
+    return updatedBid;
+  }
+  
+  async reviveBid(id: number, newBidData: Partial<InsertBid>): Promise<Bid | undefined> {
+    const existingBid = this.bids.get(id);
+    if (!existingBid) return undefined;
+    
+    // Create a new bid with updated information
+    const updatedBid: Bid = { 
+      ...existingBid, 
+      ...newBidData,
+      status: "pending", 
+      createdAt: new Date(),
+      replacedBy: undefined
+    };
+    
     this.bids.set(id, updatedBid);
     return updatedBid;
   }

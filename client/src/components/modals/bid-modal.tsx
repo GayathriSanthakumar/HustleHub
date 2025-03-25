@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
+import { Loader2, ImagePlus } from "lucide-react";
 import { insertBidSchema } from "@shared/schema";
 
 const bidFormSchema = insertBidSchema.extend({
@@ -33,6 +34,8 @@ interface BidModalProps {
 
 export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDescription }: BidModalProps) {
   const { toast } = useToast();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<BidFormValues>({
     resolver: zodResolver(bidFormSchema),
@@ -47,6 +50,28 @@ export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDesc
 
   const bidMutation = useMutation({
     mutationFn: async (values: BidFormValues) => {
+      // If there's an image, upload it first
+      if (selectedFile) {
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+        
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload image");
+        }
+        
+        const uploadData = await uploadResponse.json();
+        values.imagePath = uploadData.path;
+        setIsUploading(false);
+      }
+      
+      // Now submit the bid with the image path (if any)
       const response = await apiRequest("POST", "/api/bids", values);
       return response.json();
     },
@@ -65,6 +90,7 @@ export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDesc
         details: "",
         deliveryTime: "",
       });
+      setSelectedFile(null);
     },
     onError: (error) => {
       toast({
@@ -79,9 +105,13 @@ export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDesc
     bidMutation.mutate(values);
   }
 
+  const handleFileChange = (file: File | null) => {
+    setSelectedFile(file);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Place a Bid</DialogTitle>
           <DialogDescription>
@@ -155,11 +185,29 @@ export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDesc
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={bidMutation.isPending}>
-              {bidMutation.isPending ? (
+            
+            {/* Image Upload Field */}
+            <div className="space-y-2">
+              <FormLabel>Product Image (Optional)</FormLabel>
+              <FileUpload
+                onFileChange={handleFileChange}
+                accept="image/*"
+                maxSize={5} // 5MB max
+                label={selectedFile ? selectedFile.name : "Upload an image of your product"}
+                description="Attach a photo of your product to help the customer make a decision"
+                value={selectedFile}
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={bidMutation.isPending || isUploading}
+            >
+              {bidMutation.isPending || isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {isUploading ? "Uploading image..." : "Submitting bid..."}
                 </>
               ) : (
                 "Submit Bid"

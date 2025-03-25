@@ -82,6 +82,8 @@ export const bids = pgTable("bids", {
   amount: integer("amount").notNull(), // In INR (₹)
   details: text("details"),
   deliveryTime: text("delivery_time"),
+  imagePath: text("image_path"), // Image path for product bids
+  replacedBy: integer("replaced_by"), // ID of bid that replaced this one (if any)
   status: text("status", { enum: bidStatuses }).notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

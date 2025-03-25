@@ -470,28 +470,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!bid) {
         return res.status(404).json({ message: "Bid not found" });
       }
-
-      // Update job's accepted business IDs when accepting bid
-      if (status === "accepted") {
-        const job = await storage.getJob(bid.itemId);
-        if (job) {
-          const acceptedIds = job.acceptedBusinessIds || [];
-          acceptedIds.push(bid.businessId);
-          await storage.updateJobAcceptedBusinesses(job.id, acceptedIds);
-        }
-      }
-      
-      const existingBid = await storage.getBid(id);
-      if (!existingBid) {
-        return res.status(404).json({ message: "Bid not found" });
-      }
       
       // Determine the item to check ownership
       let item;
-      if (existingBid.itemType === "job") {
-        item = await storage.getJob(existingBid.itemId);
-      } else if (existingBid.itemType === "product") {
-        item = await storage.getProduct(existingBid.itemId);
+      if (bid.itemType === "job") {
+        item = await storage.getJob(bid.itemId);
+      } else if (bid.itemType === "product") {
+        item = await storage.getProduct(bid.itemId);
       }
       
       if (!item) {
@@ -503,16 +488,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden: You don't own this item" });
       }
       
-      const updatedBid = await storage.updateBidStatus(id, status);
+      // Update the bid status
+      let updatedBid = await storage.updateBidStatus(id, status);
       
-      // If bid is accepted and there are other bids, reject them
+      // Handle special cases based on bid status
       if (status === "accepted") {
-        // Allow multiple bids to be accepted
-        const job = await storage.getJob(bid.itemId);
-        if (job) {
-          const acceptedIds = job.acceptedBusinessIds || [];
-          acceptedIds.push(bid.businessId);
-          await storage.updateJobAcceptedBusinesses(job.id, acceptedIds);
+        // For jobs: update accepted business IDs
+        if (bid.itemType === "job") {
+          const job = await storage.getJob(bid.itemId);
+          if (job) {
+            const acceptedIds = job.acceptedBusinessIds || [];
+            if (!acceptedIds.includes(bid.businessId)) {
+              acceptedIds.push(bid.businessId);
+              await storage.updateJobAcceptedBusinesses(job.id, acceptedIds);
+            }
+          }
+        } 
+        // For products: if there's a lower bid accepted than previously accepted bids, mark them as replaced
+        else if (bid.itemType === "product") {
+          const allBids = await storage.getBidsByItem(bid.itemId, "product");
+          
+          // Get all previously accepted bids with higher amounts
+          const higherAcceptedBids = allBids.filter(
+            otherBid => otherBid.id !== bid.id && 
+                        otherBid.status === "accepted" && 
+                        otherBid.amount > bid.amount
+          );
+          
+          // Mark them as replaced
+          for (const higherBid of higherAcceptedBids) {
+            await storage.updateBidStatus(higherBid.id, "rejected", bid.id);
+          }
         }
         
         // Update item status to in_progress
@@ -524,6 +530,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(updatedBid);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Endpoint to revive a rejected bid with improvements
+  app.post("/api/bids/:id/revive", isVerifiedBusiness, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { amount, details, deliveryTime, imagePath } = req.body;
+      
+      const existingBid = await storage.getBid(id);
+      if (!existingBid) {
+        return res.status(404).json({ message: "Bid not found" });
+      }
+      
+      // Make sure this bid belongs to the current business
+      if (existingBid.businessId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden: You don't own this bid" });
+      }
+      
+      // Make sure the bid is currently rejected
+      if (existingBid.status !== "rejected") {
+        return res.status(400).json({ message: "Only rejected bids can be revived" });
+      }
+      
+      // Make sure the item still exists and is open
+      let item;
+      if (existingBid.itemType === "job") {
+        item = await storage.getJob(existingBid.itemId);
+      } else if (existingBid.itemType === "product") {
+        item = await storage.getProduct(existingBid.itemId);
+      }
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      if (item.status !== "open" && item.status !== "in_progress") {
+        return res.status(400).json({ message: "Item is no longer accepting bids" });
+      }
+      
+      // Prepare the updated bid data
+      const updatedBidData: Partial<InsertBid> = {};
+      if (amount !== undefined) updatedBidData.amount = amount;
+      if (details !== undefined) updatedBidData.details = details;
+      if (deliveryTime !== undefined) updatedBidData.deliveryTime = deliveryTime;
+      if (imagePath !== undefined) updatedBidData.imagePath = imagePath;
+      
+      // Revive the bid
+      const revivedBid = await storage.reviveBid(id, updatedBidData);
+      res.json(revivedBid);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
