@@ -901,10 +901,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (deliveryTime !== undefined) updatedBidData.deliveryTime = deliveryTime;
       if (imagePath !== undefined) updatedBidData.imagePath = imagePath;
       
-      // Revive the bid
+      // Revive the bid with improved offer
       const revivedBid = await storage.reviveBid(id, updatedBidData);
+      
+      if (!revivedBid) {
+        return res.status(500).json({ message: "Failed to revive bid" });
+      }
+      
+      // Return successful response with updated bid
       res.json(revivedBid);
     } catch (error) {
+      console.error("Error reviving bid:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
