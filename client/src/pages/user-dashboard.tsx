@@ -857,6 +857,17 @@ export default function UserDashboard() {
                                         <div className="mt-3 p-3 bg-white rounded-md border border-gray-100">
                                           <p className="text-sm text-gray-600">{bid.details}</p>
                                           <p className="mt-2 text-xs text-gray-500">Delivery time: {bid.deliveryTime}</p>
+                                          
+                                          <div className="mt-3 flex justify-between items-center">
+                                            {/* Chat button to start conversation with business */}
+                                            <StartChatButton
+                                              businessId={bid.businessId}
+                                              userId={user?.id || 0}
+                                              itemId={product.id}
+                                              itemType="product"
+                                              disabled={!user}
+                                            />
+                                          </div>
                                         </div>
                                         
                                         {/* Removed revive bid button as it should only be available for businesses */}

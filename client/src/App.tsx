@@ -13,6 +13,7 @@ import BusinessDashboard from "@/pages/business-dashboard";
 import HomePage from "@/pages/home-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
+import { ChatDrawer } from "@/components/chat";
 
 function Router() {
   return (
@@ -46,6 +47,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router />
+        <ChatDrawer />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
