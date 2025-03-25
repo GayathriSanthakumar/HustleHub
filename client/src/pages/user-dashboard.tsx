@@ -5,12 +5,6 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
-
-// Schema for bid revival form
-const bidRevivalSchema = z.object({
-  amount: z.coerce.number().positive("Amount must be positive"),
-  deliveryTime: z.string().min(1, "Delivery time is required"),
-});
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -336,21 +330,7 @@ export default function UserDashboard() {
     updateBidMutation.mutate({ bidId, status });
   };
 
-  // Handle bid revival initiation
-  const handleReviveBid = (bidId: number) => {
-    setReviveBidId(bidId);
-    setReviveBidDialogOpen(true);
-  };
-
-  // Handle bid revival submission
-  const handleReviveBidSubmit = (data: { amount: number, deliveryTime: string }) => {
-    if (!reviveBidId) return;
-    reviveBidMutation.mutate({
-      bidId: reviveBidId,
-      newAmount: data.amount,
-      newDeliveryTime: data.deliveryTime
-    });
-  };
+  // Removed bid revival functions - this functionality is only for businesses
 
   // Handle end post
   const handleEndPost = (productId: number) => {
