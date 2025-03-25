@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/ui/file-upload";
-import { Loader2, ImagePlus } from "lucide-react";
+import { Loader2, ImagePlus, TrendingDown, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { insertBidSchema } from "@shared/schema";
 
 const bidFormSchema = insertBidSchema.extend({
@@ -36,6 +37,33 @@ export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDesc
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Fetch existing bids for this item to show the lowest bid
+  const { data: itemBids, isLoading: bidsLoading } = useQuery({
+    queryKey: [`/api/bids/item/${itemId}/${itemType}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/bids/item/${itemId}/${itemType}`, {
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error("Failed to fetch bids");
+      return response.json();
+    },
+    enabled: isOpen // Only fetch when modal is open
+  });
+  
+  // Get the lowest bid amount
+  const getLowestBidAmount = () => {
+    if (!itemBids || itemBids.length === 0) return null;
+    const pendingBids = itemBids.filter((bid: any) => bid.status === "pending");
+    if (pendingBids.length === 0) return null;
+    
+    return pendingBids.reduce((min: number, bid: any) => 
+      bid.amount < min ? bid.amount : min, 
+      pendingBids[0].amount
+    );
+  };
+  
+  const lowestBidAmount = getLowestBidAmount();
 
   const form = useForm<BidFormValues>({
     resolver: zodResolver(bidFormSchema),
@@ -121,6 +149,20 @@ export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDesc
         <div className="mb-4">
           <h4 className="text-md font-medium text-gray-900">{itemName}</h4>
           <p className="text-sm text-gray-600 mt-1">{itemDescription}</p>
+          
+          {bidsLoading ? (
+            <div className="flex items-center mt-3 text-sm text-gray-600">
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              Loading current bids...
+            </div>
+          ) : lowestBidAmount ? (
+            <Alert className="mt-3 bg-muted/50">
+              <TrendingDown className="h-4 w-4 text-green-600" />
+              <AlertDescription>
+                <span className="text-sm">Current lowest bid: <span className="font-medium text-green-600">₹{lowestBidAmount}</span></span>
+              </AlertDescription>
+            </Alert>
+          ) : null}
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -134,10 +176,16 @@ export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDesc
                     <Input
                       type="number"
                       min={1}
-                      placeholder="e.g. 1500"
+                      placeholder={lowestBidAmount ? `Less than ₹${lowestBidAmount} for competitive bid` : "e.g. 1500"}
                       {...field}
                     />
                   </FormControl>
+                  {lowestBidAmount && field.value > 0 && field.value >= lowestBidAmount && (
+                    <p className="text-xs text-amber-600 flex items-center mt-1">
+                      <Info className="h-3 w-3 mr-1" />
+                      Your bid is higher than or equal to the current lowest bid
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

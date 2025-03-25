@@ -144,6 +144,18 @@ export default function BusinessDashboard() {
     request.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     request.description.toLowerCase().includes(searchQuery.toLowerCase())
   ) : [];
+  
+  // Helper function to get the lowest bid for a product
+  const getLowestBidForProduct = (productId: number) => {
+    if (!activeBids) return null;
+    const productBids = activeBids.filter(bid => 
+      bid.itemId === productId && 
+      bid.itemType === "product" && 
+      bid.status === "pending"
+    );
+    if (productBids.length === 0) return null;
+    return productBids.reduce((min, bid) => (bid.amount < min ? bid.amount : min), productBids[0].amount);
+  };
 
   // Open bid modal for a product
   const handleBidClick = (item: any) => {
@@ -318,18 +330,29 @@ export default function BusinessDashboard() {
                     <h3 className="text-lg font-medium text-gray-900">{request.name}</h3>
                     <p className="mt-2 text-sm text-gray-600 line-clamp-3">{request.description}</p>
                     <div className="mt-4 flex justify-between items-center">
-                      <Badge variant={
-                        request.status === "open" ? "success" : 
-                        request.status === "completed" ? "outline" : 
-                        "secondary"
-                      }>
-                        {
-                          request.status === "open" ? "Open for Bids" : 
-                          request.status === "in_progress" ? "In Progress" :
-                          request.status === "completed" ? "Completed" :
-                          request.status
-                        }
-                      </Badge>
+                      <div className="flex flex-col gap-2">
+                        <Badge variant={
+                          request.status === "open" ? "success" : 
+                          request.status === "completed" ? "outline" : 
+                          "secondary"
+                        }>
+                          {
+                            request.status === "open" ? "Open for Bids" : 
+                            request.status === "in_progress" ? "In Progress" :
+                            request.status === "completed" ? "Completed" :
+                            request.status
+                          }
+                        </Badge>
+                        {request.status === "open" && (
+                          <div className="text-xs font-medium text-gray-500">
+                            {getLowestBidForProduct(request.id) ? (
+                              <span className="text-green-600">Current lowest: ₹{getLowestBidForProduct(request.id)}</span>
+                            ) : (
+                              <span>No bids yet</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       {(request.status === "open" || request.status === "in_progress") ? (
                         <Button 
                           size="sm"
