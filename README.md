@@ -46,6 +46,16 @@ Push Notifications: Real-time updates on new bids, accepted jobs, and user inter
 Payment Gateway Integration: Secure transactions between users and businesses.
 Review & Rating System: Users and businesses can rate and review each other.
 
+# TECHSTACK
+
+Frontend: React.js, Tailwind CSS
+● Backend: Appwrite, Node.js
+● Database: Appwrite, PostGreSQL
+● Security: Appwrite Auth
+● Deployment: Appwrite Cloud, Vercel
+● Development: VS Code, Appwrite Console
+
+
 # FUTURE IMPLEMENTATIONS
 
 Implement AI-driven recommendations for product/service matching.
