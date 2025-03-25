@@ -248,6 +248,19 @@ export default function BusinessDashboard() {
                     )}
                     <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
                     <p className="mt-2 text-sm text-gray-600 line-clamp-3">{product.description}</p>
+                    {product.productLink && (
+                      <div className="mt-2">
+                        <a 
+                          href={product.productLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-sm text-blue-600 hover:underline flex items-center"
+                        >
+                          <ArrowRight className="h-3 w-3 mr-1" />
+                          View Product Link
+                        </a>
+                      </div>
+                    )}
                     <div className="mt-4 flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-gray-900">₹{product.price}</span>
@@ -329,6 +342,19 @@ export default function BusinessDashboard() {
                     )}
                     <h3 className="text-lg font-medium text-gray-900">{request.name}</h3>
                     <p className="mt-2 text-sm text-gray-600 line-clamp-3">{request.description}</p>
+                    {request.productLink && (
+                      <div className="mt-2">
+                        <a 
+                          href={request.productLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-sm text-blue-600 hover:underline flex items-center"
+                        >
+                          <ArrowRight className="h-3 w-3 mr-1" />
+                          View Product Link
+                        </a>
+                      </div>
+                    )}
                     <div className="mt-4 flex justify-between items-center">
                       <div className="flex flex-col gap-2">
                         <Badge variant={
