@@ -5,6 +5,8 @@ import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { JobModal } from "@/components/modals/job-modal";
 import { ProductModal } from "@/components/modals/product-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -914,7 +916,7 @@ export default function UserDashboard() {
       
       {/* Edit Job Details Dialog */}
       <Dialog open={editJobDetailsOpen} onOpenChange={setEditJobDetailsOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl">Edit Job Details</DialogTitle>
             <DialogDescription>
@@ -923,10 +925,107 @@ export default function UserDashboard() {
           </DialogHeader>
           
           {selectedJob && (
-            <div className="space-y-4">
-              <div className="grid w-full items-center gap-1.5">
-                <h3 className="text-sm font-medium text-gray-900">Job Status</h3>
-                <div className="flex space-x-2">
+            <div className="space-y-6">
+              {/* Job Details Edit Form */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid w-full items-center gap-1.5">
+                  <label htmlFor="title" className="text-sm font-medium text-gray-900">Title</label>
+                  <Input 
+                    id="title" 
+                    defaultValue={selectedJob.title} 
+                    placeholder="Job title"
+                    onChange={(e) => {
+                      setSelectedJob({
+                        ...selectedJob,
+                        title: e.target.value
+                      });
+                    }}
+                  />
+                </div>
+                
+                <div className="grid w-full items-center gap-1.5">
+                  <label htmlFor="location" className="text-sm font-medium text-gray-900">Location</label>
+                  <Input 
+                    id="location" 
+                    defaultValue={selectedJob.location} 
+                    placeholder="Job location"
+                    onChange={(e) => {
+                      setSelectedJob({
+                        ...selectedJob,
+                        location: e.target.value
+                      });
+                    }}
+                  />
+                </div>
+                
+                <div className="grid w-full items-center gap-1.5">
+                  <label htmlFor="membersNeeded" className="text-sm font-medium text-gray-900">Members Needed</label>
+                  <Input 
+                    id="membersNeeded" 
+                    type="number" 
+                    defaultValue={selectedJob.membersNeeded} 
+                    min={1}
+                    onChange={(e) => {
+                      setSelectedJob({
+                        ...selectedJob,
+                        membersNeeded: parseInt(e.target.value)
+                      });
+                    }}
+                  />
+                </div>
+                
+                <div className="grid w-full items-center gap-1.5">
+                  <label htmlFor="radius" className="text-sm font-medium text-gray-900">Location Radius (km)</label>
+                  <Input 
+                    id="radius" 
+                    type="number" 
+                    defaultValue={selectedJob.radius || 0} 
+                    min={0}
+                    onChange={(e) => {
+                      setSelectedJob({
+                        ...selectedJob,
+                        radius: parseInt(e.target.value)
+                      });
+                    }}
+                  />
+                </div>
+                
+                <div className="grid w-full items-center gap-1.5 md:col-span-2">
+                  <label htmlFor="contactInfo" className="text-sm font-medium text-gray-900">Contact Information</label>
+                  <Input 
+                    id="contactInfo" 
+                    defaultValue={selectedJob.contactInfo} 
+                    placeholder="Phone number, email, etc."
+                    onChange={(e) => {
+                      setSelectedJob({
+                        ...selectedJob,
+                        contactInfo: e.target.value
+                      });
+                    }}
+                  />
+                </div>
+                
+                <div className="grid w-full items-center gap-1.5 md:col-span-2">
+                  <label htmlFor="description" className="text-sm font-medium text-gray-900">Description</label>
+                  <Textarea 
+                    id="description" 
+                    defaultValue={selectedJob.description} 
+                    placeholder="Detailed job description"
+                    rows={4}
+                    onChange={(e) => {
+                      setSelectedJob({
+                        ...selectedJob,
+                        description: e.target.value
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* Job Status Section */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Job Status</h3>
+                <div className="flex flex-wrap gap-2">
                   <Button 
                     variant={selectedJob.status === "open" ? "default" : "outline"} 
                     size="sm"
@@ -976,9 +1075,33 @@ export default function UserDashboard() {
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="flex justify-between">
+            <Button 
+              variant="default" 
+              onClick={() => {
+                // Handle form submission
+                apiRequest("PATCH", `/api/jobs/${selectedJob.id}`, selectedJob)
+                  .then(() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/jobs/user"] });
+                    toast({
+                      title: "Job updated successfully",
+                      description: "Your job details have been updated",
+                    });
+                    setEditJobDetailsOpen(false);
+                  })
+                  .catch(error => {
+                    toast({
+                      title: "Failed to update job",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  });
+              }}
+            >
+              Save Changes
+            </Button>
             <Button variant="outline" onClick={() => setEditJobDetailsOpen(false)}>
-              Close
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
