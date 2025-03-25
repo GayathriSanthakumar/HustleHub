@@ -417,6 +417,13 @@ export default function UserDashboard() {
   const getProduct = (productId: number) => {
     return products?.find(p => p.id === productId);
   };
+  
+  // Helper function to get the lowest bid for a product
+  const getLowestBidForProduct = (productId: number) => {
+    const productBids = bids?.filter(bid => bid.itemId === productId && bid.itemType === "product" && bid.status === "pending");
+    if (!productBids || productBids.length === 0) return null;
+    return productBids.reduce((min, bid) => (bid.amount < min ? bid.amount : min), productBids[0].amount);
+  };
 
   return (
     <DashboardLayout title="User Dashboard" userType="user">
@@ -616,9 +623,20 @@ export default function UserDashboard() {
                     <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
                     <p className="mt-2 text-sm text-gray-600 line-clamp-3">{product.description}</p>
                     <div className="mt-4 flex justify-between items-center">
-                      <Badge variant={getStatusBadge(product.status).variant}>
-                        {getStatusBadge(product.status).label}
-                      </Badge>
+                      <div className="flex flex-col gap-2">
+                        <Badge variant={getStatusBadge(product.status).variant}>
+                          {getStatusBadge(product.status).label}
+                        </Badge>
+                        {product.status === "open" && (
+                          <div className="text-xs font-medium text-gray-500">
+                            {getLowestBidForProduct(product.id) ? (
+                              <span className="text-green-600">Lowest bid: ₹{getLowestBidForProduct(product.id)}</span>
+                            ) : (
+                              <span>No bids yet</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <Button 
                         variant="link" 
                         size="sm" 
