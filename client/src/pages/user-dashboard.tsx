@@ -62,7 +62,6 @@ export default function UserDashboard() {
   // End post confirmation dialog
   const [endPostDialogOpen, setEndPostDialogOpen] = useState<boolean>(false);
   const [productToEnd, setProductToEnd] = useState<number | null>(null);
-  const [currentBidId, setCurrentBidId] = useState<number | null>(null);
 
   // Base path mapping
   const tabPaths = {
@@ -167,18 +166,15 @@ export default function UserDashboard() {
   });
   
   // Load bids for specific job
-  const { data: jobBids, isLoading: jobBidsLoading, refetch: refetchJobBids } = useQuery({
+  const { data: jobBids, isLoading: jobBidsLoading } = useQuery({
     queryKey: ["/api/bids/item", selectedJob?.id, "job"],
     queryFn: async () => {
       if (!selectedJob) return [];
-      console.log("Fetching bids for job:", selectedJob.id);
       const response = await fetch(`/api/bids/item/${selectedJob.id}/job`, {
         credentials: "include"
       });
       if (!response.ok) throw new Error("Failed to fetch job bids");
-      const data = await response.json();
-      console.log("Job bids data:", data);
-      return data;
+      return response.json();
     },
     enabled: !!selectedJob && viewPostDetailsOpen
   });
@@ -298,10 +294,6 @@ export default function UserDashboard() {
   // Accept business for job mutation
   const acceptBusinessMutation = useMutation({
     mutationFn: async ({ jobId, businessId }: { jobId: number, businessId: number }) => {
-      if (!currentBidId) {
-        throw new Error("Bid ID not found. Please try again.");
-      }
-      
       // Get the current job first to get existing accepted businesses
       const job = await apiRequest("GET", `/api/jobs/${jobId}`).then(res => res.json());
       
@@ -311,27 +303,15 @@ export default function UserDashboard() {
         acceptedBusinessIds.push(businessId);
       }
       
-      console.log("Accepting business:", businessId, "for job:", jobId);
-      console.log("Updated acceptedBusinessIds:", acceptedBusinessIds);
-      console.log("Updating bid status for bid ID:", currentBidId);
-      
       // Update the job with the new list of accepted businesses
       const response = await apiRequest("PATCH", `/api/jobs/${jobId}/accepted-businesses`, { 
         acceptedBusinessIds 
       });
-      
-      // Also update the bid to accepted status
-      await apiRequest("PATCH", `/api/bids/${currentBidId}/status`, { status: "accepted" });
-      
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/bids/item", selectedJob?.id, "job"] });
-      
-      // Refetch job bids to update the UI
-      refetchJobBids();
-      
       toast({
         title: "Business accepted",
         description: "The business has been accepted for this job",
@@ -974,11 +954,7 @@ export default function UserDashboard() {
               ) : (
                 <div className="space-y-4">
                   {jobBids.map((bid) => {
-                    // Fix issue with acceptedBusinessIds - ensure it's always an array
-                    const acceptedBusinessIds = Array.isArray(selectedJob?.acceptedBusinessIds) 
-                      ? selectedJob.acceptedBusinessIds 
-                      : [];
-                    const isAccepted = acceptedBusinessIds.includes(bid.businessId);
+                    const isAccepted = selectedJob?.acceptedBusinessIds?.includes(bid.businessId);
                     const business = jobBidBusinesses?.[bid.businessId];
                     
                     return (
@@ -1037,14 +1013,10 @@ export default function UserDashboard() {
                               size="sm"
                               variant="default"
                               className="bg-green-600 hover:bg-green-700"
-                              onClick={() => {
-                                // Set the current bid ID before mutation
-                                setCurrentBidId(bid.id);
-                                acceptBusinessMutation.mutate({ 
-                                  jobId: selectedJob?.id || 0, 
-                                  businessId: bid.businessId 
-                                });
-                              }}
+                              onClick={() => acceptBusinessMutation.mutate({ 
+                                jobId: selectedJob?.id || 0, 
+                                businessId: bid.businessId 
+                              })}
                               disabled={acceptBusinessMutation.isPending || updateBidMutation.isPending}
                             >
                               {acceptBusinessMutation.isPending ? (
@@ -1058,15 +1030,11 @@ export default function UserDashboard() {
                               size="sm"
                               variant="outline"
                               className="border-red-600 text-red-600 hover:bg-red-50"
-                              onClick={() => {
-                                // Set the current bid ID before mutation
-                                setCurrentBidId(bid.id);
-                                updateBidMutation.mutate({ 
-                                  bidId: bid.id, 
-                                  status: "rejected",
-                                  itemType: "job" 
-                                });
-                              }}
+                              onClick={() => updateBidMutation.mutate({ 
+                                bidId: bid.id, 
+                                status: "rejected",
+                                itemType: "job" 
+                              })}
                               disabled={acceptBusinessMutation.isPending || updateBidMutation.isPending}
                             >
                               {updateBidMutation.isPending ? (
