@@ -202,7 +202,7 @@ export function BidStatusNotification({ businessId }: BidNotificationProps) {
             setSelectedBid(null);
             
             // Refresh bids data
-            queryClient.invalidateQueries(["/api/bids/business"]);
+            queryClient.invalidateQueries({ queryKey: ["/api/bids/business"] });
           }}
         />
       )}

@@ -12,6 +12,7 @@ import { BidModal } from "@/components/modals/bid-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BidStatusNotification } from "@/components/business/bid-status-notification";
+import { BidCategories } from "@/components/business/bid-categories";
 import { 
   Edit, 
   Search, 
@@ -317,13 +318,9 @@ export default function BusinessDashboard() {
                 <p className="text-gray-500 mt-2">Check the "User Requests" tab to find opportunities!</p>
               </div>
             ) : (
-              // Use the BidCategories component from above
+              // Use the BidCategories component
               <div className="w-full">
-                {/* Dynamic import of BidCategories */}
-                {(() => {
-                  const BidCategories = require("@/components/business/bid-categories").BidCategories;
-                  return <BidCategories />;
-                })()}
+                <BidCategories />
               </div>
             )}
           </div>
