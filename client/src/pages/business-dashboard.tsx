@@ -343,13 +343,30 @@ export default function BusinessDashboard() {
                             request.status
                           }
                         </Badge>
-                        {request.status === "open" && (
+                        {(request.status === "open" || request.status === "in_progress") && (
                           <div className="text-xs font-medium text-gray-500">
-                            {getLowestBidForProduct(request.id) ? (
+                            {request.lowestBidAmount ? (
+                              <span className="text-green-600 font-semibold">
+                                Current lowest: ₹{request.lowestBidAmount}
+                              </span>
+                            ) : getLowestBidForProduct(request.id) ? (
                               <span className="text-green-600">Current lowest: ₹{getLowestBidForProduct(request.id)}</span>
                             ) : (
                               <span>No bids yet</span>
                             )}
+                          </div>
+                        )}
+                        
+                        {request.lowestBidImagePath && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-1">Sample from lowest bidder:</p>
+                            <div className="h-16 w-16 rounded overflow-hidden border border-gray-200">
+                              <img 
+                                src={request.lowestBidImagePath} 
+                                alt="Lowest bid sample" 
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
                           </div>
                         )}
                       </div>

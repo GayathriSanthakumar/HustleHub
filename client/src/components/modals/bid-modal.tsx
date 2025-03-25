@@ -158,11 +158,19 @@ export function BidModal({ isOpen, onClose, itemId, itemType, itemName, itemDesc
           ) : lowestBidAmount ? (
             <Alert className="mt-3 bg-muted/50">
               <TrendingDown className="h-4 w-4 text-green-600" />
-              <AlertDescription>
-                <span className="text-sm">Current lowest bid: <span className="font-medium text-green-600">₹{lowestBidAmount}</span></span>
+              <AlertDescription className="space-y-1">
+                <div className="text-sm">Current lowest bid: <span className="font-medium text-green-600">₹{lowestBidAmount}</span></div>
+                <div className="text-xs text-gray-600">To win this bid, consider offering a price below ₹{lowestBidAmount}</div>
               </AlertDescription>
             </Alert>
-          ) : null}
+          ) : (
+            <Alert className="mt-3 bg-blue-50 border-blue-100">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription>
+                <span className="text-sm">No bids yet - you could be the first!</span>
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
