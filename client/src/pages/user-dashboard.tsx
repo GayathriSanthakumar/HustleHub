@@ -62,9 +62,7 @@ export default function UserDashboard() {
   const [viewPostDetailsOpen, setViewPostDetailsOpen] = useState<boolean>(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   
-  // Bid revival states
-  const [reviveBidId, setReviveBidId] = useState<number | null>(null);
-  const [reviveBidDialogOpen, setReviveBidDialogOpen] = useState<boolean>(false);
+  // End post confirmation dialog only
   
   // End post confirmation dialog
   const [endPostDialogOpen, setEndPostDialogOpen] = useState<boolean>(false);
