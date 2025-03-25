@@ -192,6 +192,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // General job update endpoint
+  app.patch("/api/jobs/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const jobData = req.body;
+      
+      // Get the existing job
+      const job = await storage.getJob(id);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      // Ensure user owns the job
+      if (job.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden: You don't own this job" });
+      }
+      
+      // Validate that we're not changing critical fields
+      if (jobData.userId && jobData.userId !== job.userId) {
+        return res.status(400).json({ message: "Cannot change job owner" });
+      }
+      
+      // Update the job
+      const updatedJob = await storage.updateJob(id, jobData);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error updating job:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.patch("/api/jobs/:id/status", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
