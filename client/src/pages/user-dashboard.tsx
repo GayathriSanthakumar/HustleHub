@@ -285,9 +285,12 @@ export default function UserDashboard() {
                             </p>
                           </div>
                         </div>
-                        <div className="mt-2">
+                        <div className="mt-2 flex space-x-4">
                           <Button variant="link" size="sm" className="p-0 h-auto">
-                            View Bids <ArrowRight className="h-4 w-4 ml-1" />
+                            Edit Details <Edit className="h-4 w-4 ml-1" />
+                          </Button>
+                          <Button variant="link" size="sm" className="p-0 h-auto">
+                            View Post <ArrowRight className="h-4 w-4 ml-1" />
                           </Button>
                         </div>
                       </div>
