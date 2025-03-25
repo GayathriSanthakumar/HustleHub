@@ -111,6 +111,39 @@ export default function UserDashboard() {
     enabled: !!selectedProductId
   });
   
+  // Load business details for each bid
+  const { data: bidBusinesses, isLoading: bidBusinessesLoading } = useQuery({
+    queryKey: ["/api/bid-businesses", productBids],
+    queryFn: async () => {
+      if (!productBids || productBids.length === 0) return {};
+      
+      // Create an object to store business details by id
+      const businessDetails: Record<number, any> = {};
+      
+      // Fetch details for each unique business ID
+      const uniqueBusinessIds = [...new Set(productBids.map((bid: any) => bid.businessId))];
+      
+      await Promise.all(
+        uniqueBusinessIds.map(async (businessId: number) => {
+          try {
+            const response = await fetch(`/api/users/${businessId}`, {
+              credentials: "include"
+            });
+            if (response.ok) {
+              const data = await response.json();
+              businessDetails[businessId] = data;
+            }
+          } catch (error) {
+            console.error(`Error fetching business ${businessId} details:`, error);
+          }
+        })
+      );
+      
+      return businessDetails;
+    },
+    enabled: !!productBids && productBids.length > 0
+  });
+  
   // Load bids for specific job
   const { data: jobBids, isLoading: jobBidsLoading } = useQuery({
     queryKey: ["/api/bids/item", selectedJob?.id, "job"],
@@ -506,52 +539,169 @@ export default function UserDashboard() {
                           <p className="text-gray-500">No bids received yet for this product.</p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                          {productBids.map((bid) => (
-                            <div key={bid.id} className="bg-gray-50 p-4 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-medium text-gray-900">Business ID: {bid.businessId}</h4>
-                                <span className="text-lg font-bold text-gray-900">₹{bid.amount}</span>
-                              </div>
-                              <p className="mt-2 text-sm text-gray-600">{bid.details}</p>
-                              <p className="mt-1 text-xs text-gray-500">Delivery: {bid.deliveryTime}</p>
-                              <div className="mt-4 flex space-x-2">
-                                {bid.status === "pending" ? (
-                                  <>
-                                    <Button 
-                                      size="sm"
-                                      variant="default"
-                                      className="bg-green-600 hover:bg-green-700"
-                                      onClick={() => handleBidAction(bid.id, "accepted")}
-                                      disabled={updateBidMutation.isPending}
-                                    >
-                                      <Check className="h-4 w-4 mr-1" />
-                                      Accept Quote
-                                    </Button>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm"
-                                      className="text-red-600 border-red-600 hover:bg-red-50"
-                                      onClick={() => handleBidAction(bid.id, "rejected")}
-                                      disabled={updateBidMutation.isPending}
-                                    >
-                                      <X className="h-4 w-4 mr-1" />
-                                      Reject Quote
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <Badge variant={bid.status === "accepted" ? "success" : "destructive"}>
-                                    {bid.status === "accepted" ? (
-                                      <Check className="h-4 w-4 mr-1" />
-                                    ) : (
-                                      <X className="h-4 w-4 mr-1" />
-                                    )}
-                                    {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
-                                  </Badge>
-                                )}
+                        <div>
+                          {/* Bid sections */}
+                          <div className="mb-6">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-4">Active Bids</h4>
+                            {/* Sort bids by amount (lowest first) */}
+                            <div className="grid grid-cols-1 gap-4">
+                              {productBids
+                                .filter(bid => bid.status === "pending")
+                                .sort((a, b) => a.amount - b.amount)
+                                .map((bid) => {
+                                  const business = bidBusinesses?.[bid.businessId];
+                                  return (
+                                    <div key={bid.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                          <div className="bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center text-primary mr-3">
+                                            <Store className="h-5 w-5" />
+                                          </div>
+                                          <div>
+                                            <h4 className="text-sm font-medium text-gray-900">
+                                              {business?.businessDetails?.businessName || `Business #${bid.businessId}`}
+                                            </h4>
+                                            <p className="text-xs text-gray-500">
+                                              {business?.businessDetails?.shopLocation || "Location not specified"}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <span className="text-lg font-bold text-gray-900">₹{bid.amount}</span>
+                                      </div>
+                                      <div className="mt-3 p-3 bg-white rounded-md border border-gray-100">
+                                        <p className="text-sm text-gray-600">{bid.details}</p>
+                                        <p className="mt-2 text-xs text-gray-500">Delivery time: {bid.deliveryTime}</p>
+                                      </div>
+                                      <div className="mt-4 flex space-x-2 justify-end">
+                                        <Button 
+                                          size="sm"
+                                          variant="default"
+                                          className="bg-green-600 hover:bg-green-700"
+                                          onClick={() => handleBidAction(bid.id, "accepted")}
+                                          disabled={updateBidMutation.isPending}
+                                        >
+                                          <Check className="h-4 w-4 mr-1" />
+                                          Accept Quote
+                                        </Button>
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          className="text-red-600 border-red-600 hover:bg-red-50"
+                                          onClick={() => handleBidAction(bid.id, "rejected")}
+                                          disabled={updateBidMutation.isPending}
+                                        >
+                                          <X className="h-4 w-4 mr-1" />
+                                          Reject Quote
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                          
+                          {/* Accepted Bids Section */}
+                          {productBids.some(bid => bid.status === "accepted") && (
+                            <div className="mb-6">
+                              <h4 className="text-sm font-semibold text-gray-700 mb-4">Accepted Bids</h4>
+                              <div className="grid grid-cols-1 gap-4">
+                                {productBids
+                                  .filter(bid => bid.status === "accepted")
+                                  .sort((a, b) => a.amount - b.amount)
+                                  .map((bid) => {
+                                    const business = bidBusinesses?.[bid.businessId];
+                                    return (
+                                      <div key={bid.id} className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center">
+                                            <div className="bg-green-100 h-10 w-10 rounded-full flex items-center justify-center text-green-600 mr-3">
+                                              <Store className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                              <h4 className="text-sm font-medium text-gray-900">
+                                                {business?.businessDetails?.businessName || `Business #${bid.businessId}`}
+                                              </h4>
+                                              <p className="text-xs text-gray-500">
+                                                {business?.businessDetails?.shopLocation || "Location not specified"}
+                                              </p>
+                                            </div>
+                                          </div>
+                                          <div className="flex flex-col items-end">
+                                            <span className="text-lg font-bold text-gray-900">₹{bid.amount}</span>
+                                            <Badge variant="success" className="mt-1">
+                                              <Check className="h-3 w-3 mr-1" />
+                                              Accepted
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                        <div className="mt-3 p-3 bg-white rounded-md border border-gray-100">
+                                          <p className="text-sm text-gray-600">{bid.details}</p>
+                                          <p className="mt-2 text-xs text-gray-500">Delivery time: {bid.deliveryTime}</p>
+                                        </div>
+                                        <div className="mt-3 p-3 bg-green-100/50 rounded-md border border-green-200">
+                                          <h6 className="font-medium text-xs text-gray-900 mb-2">Contact Information</h6>
+                                          <div className="space-y-1">
+                                            <div className="flex items-center">
+                                              <Phone className="h-3 w-3 mr-2 text-gray-500" />
+                                              <span className="text-xs">{business?.businessDetails?.shopLocation || "No phone provided"}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                              <Mail className="h-3 w-3 mr-2 text-gray-500" />
+                                              <span className="text-xs">{business?.email || "No email provided"}</span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                               </div>
                             </div>
-                          ))}
+                          )}
+                          
+                          {/* Rejected Bids Section */}
+                          {productBids.some(bid => bid.status === "rejected") && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 mb-4">Rejected Bids</h4>
+                              <div className="grid grid-cols-1 gap-4">
+                                {productBids
+                                  .filter(bid => bid.status === "rejected")
+                                  .sort((a, b) => a.amount - b.amount)
+                                  .map((bid) => {
+                                    const business = bidBusinesses?.[bid.businessId];
+                                    return (
+                                      <div key={bid.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 opacity-75">
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center">
+                                            <div className="bg-gray-200 h-10 w-10 rounded-full flex items-center justify-center text-gray-500 mr-3">
+                                              <Store className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                              <h4 className="text-sm font-medium text-gray-700">
+                                                {business?.businessDetails?.businessName || `Business #${bid.businessId}`}
+                                              </h4>
+                                              <p className="text-xs text-gray-500">
+                                                {business?.businessDetails?.shopLocation || "Location not specified"}
+                                              </p>
+                                            </div>
+                                          </div>
+                                          <div className="flex flex-col items-end">
+                                            <span className="text-md font-bold text-gray-700">₹{bid.amount}</span>
+                                            <Badge variant="destructive" className="mt-1">
+                                              <X className="h-3 w-3 mr-1" />
+                                              Rejected
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                        <div className="mt-3 p-3 bg-white rounded-md border border-gray-100">
+                                          <p className="text-sm text-gray-600">{bid.details}</p>
+                                          <p className="mt-2 text-xs text-gray-500">Delivery time: {bid.deliveryTime}</p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

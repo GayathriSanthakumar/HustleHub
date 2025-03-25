@@ -91,6 +91,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Server error" });
     }
   });
+  
+  // Get user details by ID (for bid display)
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // If user is a business, fetch business details
+      if (user.userType === "business") {
+        const businessDetails = await storage.getBusinessDetails(id);
+        if (businessDetails) {
+          // Return user with business details but exclude sensitive info
+          const { password, ...userWithoutPassword } = user;
+          return res.json({
+            ...userWithoutPassword,
+            businessDetails
+          });
+        }
+      }
+      
+      // Return user without password
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
 
   app.post("/api/business/details", isAuthenticated, upload.single("verificationProof"), async (req, res) => {
     try {
