@@ -49,6 +49,10 @@ export default function UserDashboard() {
   const [editJobDetailsOpen, setEditJobDetailsOpen] = useState<boolean>(false);
   const [viewPostDetailsOpen, setViewPostDetailsOpen] = useState<boolean>(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  
+  // Bid revival states
+  const [reviveBidId, setReviveBidId] = useState<number | null>(null);
+  const [reviveBidDialogOpen, setReviveBidDialogOpen] = useState<boolean>(false);
 
   // Base path mapping
   const tabPaths = {
@@ -182,6 +186,33 @@ export default function UserDashboard() {
       });
     }
   });
+  
+  // Revive bid mutation
+  const reviveBidMutation = useMutation({
+    mutationFn: async ({ bidId, newAmount, newDeliveryTime }: { bidId: number, newAmount: number, newDeliveryTime: string }) => {
+      const response = await apiRequest("PATCH", `/api/bids/${bidId}/revive`, { 
+        amount: newAmount,
+        deliveryTime: newDeliveryTime
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/item", selectedProductId, "product"] });
+      setReviveBidId(null);
+      setReviveBidDialogOpen(false);
+      toast({
+        title: "Bid revived successfully",
+        description: "The bid has been reinstated with new terms",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to revive bid",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 
   // End product post mutation
   const endPostMutation = useMutation({
@@ -266,6 +297,22 @@ export default function UserDashboard() {
   // Handle bid action
   const handleBidAction = (bidId: number, status: "accepted" | "rejected") => {
     updateBidMutation.mutate({ bidId, status });
+  };
+
+  // Handle bid revival initiation
+  const handleReviveBid = (bidId: number) => {
+    setReviveBidId(bidId);
+    setReviveBidDialogOpen(true);
+  };
+
+  // Handle bid revival submission
+  const handleReviveBidSubmit = (data: { amount: number, deliveryTime: string }) => {
+    if (!reviveBidId) return;
+    reviveBidMutation.mutate({
+      bidId: reviveBidId,
+      newAmount: data.amount,
+      newDeliveryTime: data.deliveryTime
+    });
   };
 
   // Handle end post
