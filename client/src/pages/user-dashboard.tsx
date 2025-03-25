@@ -249,32 +249,7 @@ export default function UserDashboard() {
     }
   });
   
-  // Revive bid mutation
-  const reviveBidMutation = useMutation({
-    mutationFn: async ({ bidId, newAmount, newDeliveryTime }: { bidId: number, newAmount: number, newDeliveryTime: string }) => {
-      const response = await apiRequest("POST", `/api/bids/${bidId}/revive`, { 
-        amount: newAmount,
-        deliveryTime: newDeliveryTime
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bids/item", selectedProductId, "product"] });
-      setReviveBidId(null);
-      setReviveBidDialogOpen(false);
-      toast({
-        title: "Bid revived successfully",
-        description: "The bid has been reinstated with new terms",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to revive bid",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
+  // Removed revive bid mutation from user dashboard - this functionality is only for businesses
 
   // End product post mutation
   const endPostMutation = useMutation({
@@ -904,16 +879,7 @@ export default function UserDashboard() {
                                           <p className="mt-2 text-xs text-gray-500">Delivery time: {bid.deliveryTime}</p>
                                         </div>
                                         
-                                        <div className="mt-3 flex justify-end">
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-primary border-primary hover:bg-primary/10"
-                                            onClick={() => handleReviveBid(bid.id)}
-                                          >
-                                            Revive Bid with New Terms
-                                          </Button>
-                                        </div>
+                                        {/* Removed revive bid button as it should only be available for businesses */}
                                       </div>
                                     );
                                   })}
@@ -1356,26 +1322,7 @@ export default function UserDashboard() {
         </DialogContent>
       </Dialog>
       
-      {/* Bid Revival Dialog */}
-      <Dialog open={reviveBidDialogOpen} onOpenChange={setReviveBidDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Revive Bid with New Terms</DialogTitle>
-            <DialogDescription>
-              Update your bid with new terms to make it competitive again.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {reviveBidMutation.isPending ? (
-            <div className="flex justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <ReviveBidForm onSubmit={handleReviveBidSubmit} onCancel={() => setReviveBidDialogOpen(false)} />
-          )}
-        
-        </DialogContent>
-      </Dialog>
+      {/* Removed Bid Revival Dialog - this functionality is only for businesses */}
 
       {/* End Post Confirmation Dialog */}
       <Dialog open={endPostDialogOpen} onOpenChange={setEndPostDialogOpen}>
@@ -1440,79 +1387,4 @@ export default function UserDashboard() {
   );
 }
 
-// ReviveBidForm Component
-interface ReviveBidFormProps {
-  onSubmit: (data: { amount: number; deliveryTime: string }) => void;
-  onCancel: () => void;
-}
-
-function ReviveBidForm({ onSubmit, onCancel }: ReviveBidFormProps) {
-  const form = useForm<z.infer<typeof bidRevivalSchema>>({
-    resolver: zodResolver(bidRevivalSchema),
-    defaultValues: {
-      amount: 0,
-      deliveryTime: ""
-    }
-  });
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>New Amount (₹)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Enter new amount"
-                  {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage>{form.formState.errors.amount?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="deliveryTime"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>New Delivery Time</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g. 1 week, 3 days, etc."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage>{form.formState.errors.deliveryTime?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
-        
-        <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={onCancel}
-            type="button"
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit"
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : null}
-            Submit New Bid
-          </Button>
-        </DialogFooter>
-      </form>
-    </Form>
-  );
-}
+// Note: ReviveBidForm Component has been removed as it's only needed for business accounts
