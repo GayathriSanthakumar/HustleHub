@@ -45,7 +45,8 @@ import {
   User,
   Store,
   MapPin,
-  Users
+  Users,
+  ExternalLink
 } from "lucide-react";
 
 export default function UserDashboard() {
@@ -420,9 +421,17 @@ export default function UserDashboard() {
   
   // Helper function to get the lowest bid for a product
   const getLowestBidForProduct = (productId: number) => {
-    const productBids = bids?.filter(bid => bid.itemId === productId && bid.itemType === "product" && bid.status === "pending");
-    if (!productBids || productBids.length === 0) return null;
-    return productBids.reduce((min, bid) => (bid.amount < min ? bid.amount : min), productBids[0].amount);
+    // Using productBids from the query instead of undefined 'bids'
+    const filteredBids = productBids?.filter((bid: any) => 
+      bid.itemId === productId && 
+      bid.itemType === "product" && 
+      bid.status === "pending"
+    );
+    if (!filteredBids || filteredBids.length === 0) return null;
+    return filteredBids.reduce(
+      (min: number, bid: any) => (bid.amount < min ? bid.amount : min), 
+      filteredBids[0].amount
+    );
   };
 
   return (

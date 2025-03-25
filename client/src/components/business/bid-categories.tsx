@@ -72,22 +72,25 @@ export function BidCategories() {
     return bids;
   };
 
-  // Get item name and status from its ID
+  // Get item name, status, and product link from its ID
   const getItemInfo = (itemId: number, itemType: string) => {
     if (itemType === "product" && products) {
       const product = products.find((p: any) => p.id === itemId);
       return product ? {
         name: product.name,
-        status: product.status
+        status: product.status,
+        productLink: product.productLink || null
       } : {
         name: `Item #${itemId}`,
-        status: "unknown"
+        status: "unknown",
+        productLink: null
       };
     }
     
     return {
       name: `Item #${itemId}`,
-      status: "unknown"
+      status: "unknown",
+      productLink: null
     };
   };
 
@@ -177,6 +180,21 @@ export function BidCategories() {
                               </p>
                             </div>
                           </div>
+
+                          {/* Display product link if available */}
+                          {bid.itemType === "product" && itemInfo.productLink && (
+                            <div className="mt-2">
+                              <a 
+                                href={itemInfo.productLink} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-sm text-blue-600 hover:underline flex items-center"
+                              >
+                                <ArrowRight className="h-3 w-3 mr-1" />
+                                View Product Link
+                              </a>
+                            </div>
+                          )}
                           
                           {/* Show details for specific statuses */}
                           {bid.status === "accepted" && (
