@@ -166,15 +166,18 @@ export default function UserDashboard() {
   });
   
   // Load bids for specific job
-  const { data: jobBids, isLoading: jobBidsLoading } = useQuery({
+  const { data: jobBids, isLoading: jobBidsLoading, refetch: refetchJobBids } = useQuery({
     queryKey: ["/api/bids/item", selectedJob?.id, "job"],
     queryFn: async () => {
       if (!selectedJob) return [];
+      console.log("Fetching bids for job:", selectedJob.id);
       const response = await fetch(`/api/bids/item/${selectedJob.id}/job`, {
         credentials: "include"
       });
       if (!response.ok) throw new Error("Failed to fetch job bids");
-      return response.json();
+      const data = await response.json();
+      console.log("Job bids data:", data);
+      return data;
     },
     enabled: !!selectedJob && viewPostDetailsOpen
   });
