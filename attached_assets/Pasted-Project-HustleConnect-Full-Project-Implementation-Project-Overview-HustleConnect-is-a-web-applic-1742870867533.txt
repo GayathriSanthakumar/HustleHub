@@ -1,0 +1,148 @@
+Project: HustleConnect - Full Project Implementation
+Project Overview: HustleConnect is a web application that connects businesses (vendors) with users seeking jobs and products. The platform has two main account types:
+
+Business Account: Vendors/shops who can post bids on product requests.
+
+User Account: Individuals looking for jobs or products, where they can create requests, accept bids, and interact with businesses.
+
+Enhancements and Features:
+Business Bids on Product Posts (User Side):
+
+In a product post created by a user, when the user clicks on “View Offers,” display a complete list of all bids submitted by businesses.
+
+Each bid must show:
+
+Bidder’s name and profile.
+
+Bid amount.
+
+Product details.
+
+The bids should be sorted in ascending order based on the bid amount.
+
+Display “Accepted Bids” only after a bid has been accepted by the user.
+
+Before acceptance, bids are shown as active bids in the "View Offers" section.
+
+Accepting and Rejecting Bids with Dynamic Updates:
+
+Allow users to accept or reject bids from the list of active bids shown on the product post.
+
+When a bid is accepted:
+
+Update the bid’s status to “accepted” on the backend.
+
+Move it into an “Accepted Bids” section, sorted by the lowest bid amount.
+
+Notify the corresponding business that their bid has been accepted.
+
+If the user later accepts a different bid with a lower amount than a previously accepted bid:
+
+Update the status of the initial bid to indicate it was replaced.
+
+Notify the previous business that the customer chose a more competitive offer.
+
+Allow the previous bidder to revive their bid by submitting a better offer based on the new, lower accepted bid amount.
+
+When a bid is rejected:
+
+Provide a “Revive Bid” option for businesses to submit an improved bid for the product post.
+
+Ensure all these status changes, including the revival of bids, are reflected dynamically across the UI and backend.
+
+Business Bid Enhancements and Product Image Visibility:
+
+Ensure that business users can attach an image with their bid.
+
+On the user side, display the product image the user uploaded when creating the product post.
+
+This allows businesses to see the product they are bidding on.
+
+Ensure that the product post remains active for bidding until the user explicitly ends it, allowing multiple bids and subsequent bid updates.
+
+Backend API Updates:
+
+Update relevant API endpoints (e.g., in Server/controllers/productController.ts and associated routes) to handle:
+
+Bid status updates.
+
+Notifications when bids are accepted or rejected.
+
+Display logic for product images and bids.
+
+Ensure that when a bid is accepted or rejected, the status is updated correctly in the database.
+
+Frontend Updates:
+
+Modify frontend components (e.g., in Client/src/pages/ProductPostDetails.tsx) to:
+
+Display full bid details, including the business name, quoted value, and any relevant bid details.
+
+Include buttons for accepting, rejecting, and reviving bids.
+
+Implement dynamic updates for the bid status (e.g., accepted bids, lowest bid tracking, etc.).
+
+Ensure the product image provided by the user is displayed in the bidding process, so businesses can see the product.
+
+Add proper inline comments to all new logic to clarify how the bids are displayed, sorted, updated, and revived.
+
+User Interface (UI):
+
+Ensure the UI is user-friendly, with intuitive design and clear buttons/icons for:
+
+Accepting bids.
+
+Rejecting bids.
+
+Reviving bids.
+
+View Details for products and bids.
+
+The user dashboard should list all active offers, with the ability to filter by the lowest bid, job posts, or product requests.
+
+Real-Time Updates:
+
+Use appropriate frontend techniques (e.g., WebSockets or React state) to ensure that changes to bid status (e.g., acceptance, rejection) are reflected in real-time without the need to refresh the page.
+
+Implement notifications to alert users and businesses when bids are accepted, rejected, or revived.
+
+Full Project Workflow:
+Business Account Features:
+
+Registration and Login:
+
+Users can sign up with basic business details (shop name, location, contact info, verification).
+
+Implement dummy verification logic to auto-approve the registration.
+
+Dashboard:
+
+Display product request posts with bidding options.
+
+Business users can submit bids and see a list of accepted and rejected bids.
+
+Display product images to businesses and allow them to submit quotes with images.
+
+User Account Features:
+
+Job Posting and Acceptance:
+
+Users can post jobs with job descriptions, required experience, and payment.
+
+Jobs can be accepted, and contact details are provided to the user after acceptance.
+
+Product Request and Acceptance:
+
+Users can create product requests with descriptions and links.
+
+Businesses can submit offers.
+
+Users can accept or decline offers, with dynamic updates reflecting the lowest quoted value.
+
+Notifications and Status Updates:
+
+Implement notifications for users and businesses when bid statuses change.
+
+Allow businesses to revive their bids if their initial bid is rejected in favor of a lower bid.
+
+if functionalitites or components already exist then just verify and check its working and solve the issues and implement the full project
