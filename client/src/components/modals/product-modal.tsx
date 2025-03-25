@@ -17,6 +17,7 @@ import { insertProductSchema } from "@shared/schema";
 const productFormSchema = insertProductSchema.extend({
   name: z.string().min(3, "Product name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
+  productLink: z.string().url("Please provide a valid product URL").optional(),
   image: z.instanceof(File).optional(),
 });
 

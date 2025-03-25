@@ -57,6 +57,7 @@ export const products = pgTable("products", {
   userId: integer("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
   description: text("description").notNull(),
+  productLink: text("product_link"),
   imagePath: text("image_path"),
   status: text("status", { enum: itemStatuses }).notNull().default("open"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

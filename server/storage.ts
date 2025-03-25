@@ -224,7 +224,8 @@ export class MemStorage implements IStorage {
       userId, 
       status: "open", 
       createdAt: new Date(),
-      imagePath: product.imagePath || "" 
+      imagePath: product.imagePath || "",
+      productLink: product.productLink || null
     };
     this.products.set(id, newProduct);
     return newProduct;
