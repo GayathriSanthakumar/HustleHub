@@ -64,6 +64,10 @@ export default function UserDashboard() {
   // Bid revival states
   const [reviveBidId, setReviveBidId] = useState<number | null>(null);
   const [reviveBidDialogOpen, setReviveBidDialogOpen] = useState<boolean>(false);
+  
+  // End post confirmation dialog
+  const [endPostDialogOpen, setEndPostDialogOpen] = useState<boolean>(false);
+  const [productToEnd, setProductToEnd] = useState<number | null>(null);
 
   // Base path mapping
   const tabPaths = {
@@ -376,7 +380,16 @@ export default function UserDashboard() {
 
   // Handle end post
   const handleEndPost = (productId: number) => {
-    endPostMutation.mutate(productId);
+    setProductToEnd(productId);
+    setEndPostDialogOpen(true);
+  };
+  
+  // Confirm end post
+  const confirmEndPost = () => {
+    if (productToEnd) {
+      endPostMutation.mutate(productToEnd);
+      setEndPostDialogOpen(false);
+    }
   };
 
   // Format date for display
