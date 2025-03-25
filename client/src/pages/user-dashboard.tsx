@@ -5,6 +5,12 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
+
+// Schema for bid revival form
+const bidRevivalSchema = z.object({
+  amount: z.coerce.number().positive("Amount must be positive"),
+  deliveryTime: z.string().min(1, "Delivery time is required"),
+});
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -195,7 +201,7 @@ export default function UserDashboard() {
   // Revive bid mutation
   const reviveBidMutation = useMutation({
     mutationFn: async ({ bidId, newAmount, newDeliveryTime }: { bidId: number, newAmount: number, newDeliveryTime: string }) => {
-      const response = await apiRequest("PATCH", `/api/bids/${bidId}/revive`, { 
+      const response = await apiRequest("POST", `/api/bids/${bidId}/revive`, { 
         amount: newAmount,
         deliveryTime: newDeliveryTime
       });
@@ -1183,6 +1189,94 @@ export default function UserDashboard() {
               Cancel
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Bid Revival Dialog */}
+      <Dialog open={reviveBidDialogOpen} onOpenChange={setReviveBidDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Revive Bid with New Terms</DialogTitle>
+            <DialogDescription>
+              Update your bid with new terms to make it competitive again.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {reviveBidMutation.isPending ? (
+            <div className="flex justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <Form
+              {...useForm<z.infer<typeof bidRevivalSchema>>({
+                resolver: zodResolver(bidRevivalSchema),
+                defaultValues: {
+                  amount: 0,
+                  deliveryTime: ""
+                }
+              })}
+              onSubmit={handleReviveBidSubmit}
+            >
+              {({ control, formState }) => (
+                <div className="space-y-6">
+                  <FormField
+                    control={register}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Amount (₹)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter new amount"
+                            {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage>{formState.errors.amount?.message}</FormMessage>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={register}
+                    name="deliveryTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Delivery Time</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g. 1 week, 3 days, etc."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage>{formState.errors.deliveryTime?.message}</FormMessage>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <DialogFooter>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setReviveBidDialogOpen(false)}
+                      type="button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={formState.isSubmitting}
+                    >
+                      {formState.isSubmitting ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      Submit New Bid
+                    </Button>
+                  </DialogFooter>
+                </div>
+              )}
+            </Form>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
