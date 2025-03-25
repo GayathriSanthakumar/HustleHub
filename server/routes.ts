@@ -440,6 +440,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const businessBids = await storage.getBidsByBusiness(req.user.id);
       const productBids = businessBids.filter(bid => bid.itemType === "product");
       
+      // If there are no bids, return an empty array instead of 404
+      if (!productBids.length) {
+        return res.json([]);
+      }
+      
       // Get the product IDs from the bids
       const productIds = new Set(productBids.map(bid => bid.itemId));
       
