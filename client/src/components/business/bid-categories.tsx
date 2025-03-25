@@ -61,15 +61,27 @@ export function BidCategories() {
   const getFilteredBids = () => {
     if (!bids) return [];
     
+    let filteredBids = [...bids];
+    
     if (selectedTab === "accepted") {
-      return bids.filter((bid: any) => bid.status === "accepted");
+      filteredBids = filteredBids.filter((bid: any) => bid.status === "accepted");
     } else if (selectedTab === "pending") {
-      return bids.filter((bid: any) => bid.status === "pending");
+      filteredBids = filteredBids.filter((bid: any) => bid.status === "pending");
     } else if (selectedTab === "rejected") {
-      return bids.filter((bid: any) => bid.status === "rejected");
+      filteredBids = filteredBids.filter((bid: any) => bid.status === "rejected");
+      
+      // Sort rejected bids to show those that can be revived at the top
+      filteredBids.sort((a: any, b: any) => {
+        // Sort by replacedBy first (replaced bids first)
+        if (a.replacedBy && !b.replacedBy) return -1;
+        if (!a.replacedBy && b.replacedBy) return 1;
+        
+        // Then by date (newer bids first)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
     }
     
-    return bids;
+    return filteredBids;
   };
 
   // Get item name, status, and product link from its ID
