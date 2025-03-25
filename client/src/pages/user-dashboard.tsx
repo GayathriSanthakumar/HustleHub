@@ -178,6 +178,39 @@ export default function UserDashboard() {
     },
     enabled: !!selectedJob && viewPostDetailsOpen
   });
+  
+  // Load business details for each job bid
+  const { data: jobBidBusinesses, isLoading: jobBidBusinessesLoading } = useQuery({
+    queryKey: ["/api/job-bid-businesses", jobBids],
+    queryFn: async () => {
+      if (!jobBids || jobBids.length === 0) return {};
+      
+      // Create an object to store business details by id
+      const businessDetails: Record<number, any> = {};
+      
+      // Fetch details for each unique business ID
+      const uniqueBusinessIds = [...new Set(jobBids.map((bid: any) => bid.businessId))];
+      
+      await Promise.all(
+        uniqueBusinessIds.map(async (businessId: number) => {
+          try {
+            const response = await fetch(`/api/users/${businessId}`, {
+              credentials: "include"
+            });
+            if (response.ok) {
+              const data = await response.json();
+              businessDetails[businessId] = data;
+            }
+          } catch (error) {
+            console.error(`Error fetching business ${businessId} details:`, error);
+          }
+        })
+      );
+      
+      return businessDetails;
+    },
+    enabled: !!jobBids && jobBids.length > 0 && viewPostDetailsOpen
+  });
 
   // Update bid status mutation
   const updateBidMutation = useMutation({
@@ -857,7 +890,11 @@ export default function UserDashboard() {
               
               <h4 className="font-medium text-base mb-4">Applicants</h4>
               
-              {(!jobBids || jobBids.length === 0) ? (
+              {jobBidBusinessesLoading ? (
+                <div className="flex justify-center p-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : (!jobBids || jobBids.length === 0) ? (
                 <div className="text-center p-6 border rounded-lg bg-gray-50">
                   <p className="text-gray-500">No applicants for this job yet.</p>
                 </div>
@@ -865,13 +902,23 @@ export default function UserDashboard() {
                 <div className="space-y-4">
                   {jobBids.map((bid) => {
                     const isAccepted = selectedJob?.acceptedBusinessIds?.includes(bid.businessId);
+                    const business = jobBidBusinesses?.[bid.businessId];
                     
                     return (
                       <div key={bid.id} className={`p-4 rounded-lg border ${isAccepted ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center">
-                            <User className="h-5 w-5 mr-2 text-gray-500" />
-                            <h5 className="font-medium">Business #{bid.businessId}</h5>
+                            <div className={`${isAccepted ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'} h-10 w-10 rounded-full flex items-center justify-center mr-3`}>
+                              <Store className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-gray-900">
+                                {business?.businessDetails?.businessName || `Business #${bid.businessId}`}
+                              </h5>
+                              <p className="text-xs text-gray-500">
+                                {business?.businessDetails?.shopLocation || "Location not specified"}
+                              </p>
+                            </div>
                             {isAccepted && (
                               <Badge variant="success" className="ml-2">
                                 <Check className="h-3 w-3 mr-1" />
@@ -884,25 +931,23 @@ export default function UserDashboard() {
                         
                         <p className="text-sm text-gray-700 mb-3">{bid.details}</p>
                         
-                        {/* Contact information - only shown if accepted */}
-                        {isAccepted && (
+                        {/* Contact information - shown if accepted */}
+                        {isAccepted ? (
                           <div className="mt-3 p-3 bg-white rounded border border-green-100">
                             <h6 className="font-medium text-sm text-gray-900 mb-2">Contact Information</h6>
-                            {bid.contactInfo ? (
-                              <div className="space-y-1">
-                                <div className="flex items-center">
-                                  <Phone className="h-4 w-4 mr-2 text-gray-500" />
-                                  <span className="text-sm">{bid.contactInfo.phone || "No phone provided"}</span>
-                                </div>
-                                <div className="flex items-center">
-                                  <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                                  <span className="text-sm">{bid.contactInfo.email || "No email provided"}</span>
-                                </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center">
+                                <Phone className="h-4 w-4 mr-2 text-gray-500" />
+                                <span className="text-sm">{business?.businessDetails?.shopLocation || "No phone provided"}</span>
                               </div>
-                            ) : (
-                              <p className="text-sm text-gray-500">No contact information available.</p>
-                            )}
+                              <div className="flex items-center">
+                                <Mail className="h-4 w-4 mr-2 text-gray-500" />
+                                <span className="text-sm">{business?.email || "No email provided"}</span>
+                              </div>
+                            </div>
                           </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">No contact information available.</p>
                         )}
                         
                         {!isAccepted && bid.status === "pending" && (
