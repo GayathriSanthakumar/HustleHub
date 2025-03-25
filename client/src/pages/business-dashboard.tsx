@@ -211,12 +211,24 @@ export default function BusinessDashboard() {
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {businessProducts.map((product) => (
-                <Card key={product.id} className="bg-white overflow-hidden shadow rounded-lg">
+                <Card 
+                  key={product.id} 
+                  className={`bg-white overflow-hidden shadow rounded-lg ${
+                    product.status === "completed" ? "bg-gray-50 border-2 border-gray-200" : ""
+                  }`}
+                >
+                  {product.status === "completed" && (
+                    <div className="bg-gray-200 text-gray-600 text-center py-1 text-xs font-medium">
+                      COMPLETED
+                    </div>
+                  )}
                   <CardContent className="p-4">
                     {product.imagePath && (
                       <div className="aspect-w-16 aspect-h-9 mb-4">
                         <img 
-                          className="object-cover shadow-sm rounded-md" 
+                          className={`object-cover shadow-sm rounded-md ${
+                            product.status === "completed" ? "opacity-75" : ""
+                          }`} 
                           src={product.imagePath} 
                           alt={product.name} 
                         />
@@ -225,8 +237,22 @@ export default function BusinessDashboard() {
                     <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
                     <p className="mt-2 text-sm text-gray-600 line-clamp-3">{product.description}</p>
                     <div className="mt-4 flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-900">₹{product.price}</span>
-                      <Button variant="ghost" size="sm" className="flex items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-gray-900">₹{product.price}</span>
+                        {product.status !== "open" && (
+                          <Badge variant={product.status === "completed" ? "outline" : "default"}>
+                            {product.status === "completed" ? "Completed" : 
+                             product.status === "in_progress" ? "In Progress" : 
+                             product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                          </Badge>
+                        )}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="flex items-center"
+                        disabled={product.status === "completed"}
+                      >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </Button>
