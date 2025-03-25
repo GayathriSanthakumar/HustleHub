@@ -41,9 +41,18 @@ export function FileUpload({
       }
       
       // Check file type if accept is provided
-      if (accept && !accept.split(', ').some(type => file.type === type)) {
-        setFileError(`File type must be ${accept.replace(/,/g, ' or ')}`);
-        return;
+      if (accept && accept !== "image/*") {
+        // Handle specific mime types
+        if (!accept.split(', ').some(type => file.type === type)) {
+          setFileError(`File type must be ${accept.replace(/,/g, ' or ')}`);
+          return;
+        }
+      } else if (accept === "image/*") {
+        // Handle image/* wildcard - check if the file type starts with "image/"
+        if (!file.type.startsWith('image/')) {
+          setFileError('File must be an image');
+          return;
+        }
       }
     }
     

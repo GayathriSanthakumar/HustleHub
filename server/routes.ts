@@ -521,6 +521,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // General file upload endpoint
+  app.post("/api/upload", isAuthenticated, upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Return the file path that can be used in other requests
+      const filePath = `/uploads/${req.file.filename}`;
+      res.json({ path: filePath });
+    } catch (error) {
+      res.status(500).json({ message: "File upload failed" });
+    }
+  });
+
   app.post("/api/bids", isVerifiedBusiness, async (req, res) => {
     try {
       const validatedData = insertBidSchema.parse(req.body);
