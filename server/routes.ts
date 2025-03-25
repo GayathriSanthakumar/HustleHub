@@ -424,10 +424,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bid endpoints
-  app.get("/api/bids/business", isAuthenticated, async (req, res) => {
+  app.get("/api/bids/business", isBusinessAccount, async (req, res) => {
     try {
       const bids = await storage.getBidsByBusiness(req.user.id);
       res.json(bids);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  // Get product requests where the business has placed bids
+  app.get("/api/products/with-bids", isBusinessAccount, async (req, res) => {
+    try {
+      // Get all bids by the business for product type items
+      const businessBids = await storage.getBidsByBusiness(req.user.id);
+      const productBids = businessBids.filter(bid => bid.itemType === "product");
+      
+      // Get the product IDs from the bids
+      const productIds = new Set(productBids.map(bid => bid.itemId));
+      
+      // Get all products
+      const allProducts = await storage.getAllProducts();
+      
+      // Filter products to only those where the business has placed bids
+      const productsWithBids = allProducts.filter(product => productIds.has(product.id));
+      
+      res.json(productsWithBids);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }

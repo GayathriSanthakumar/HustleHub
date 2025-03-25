@@ -89,7 +89,7 @@ export default function BusinessDashboard() {
     }
   });
 
-  // Load user product requests
+  // Load all user product requests
   const { data: userRequests, isLoading: requestsLoading } = useQuery({
     queryKey: ["/api/products"],
     queryFn: async () => {
@@ -97,6 +97,18 @@ export default function BusinessDashboard() {
         credentials: "include"
       });
       if (!response.ok) throw new Error("Failed to fetch product requests");
+      return response.json();
+    }
+  });
+  
+  // Load only product requests where the business has placed bids
+  const { data: productsWithBids, isLoading: productsWithBidsLoading } = useQuery({
+    queryKey: ["/api/products/with-bids"],
+    queryFn: async () => {
+      const response = await fetch("/api/products/with-bids", {
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error("Failed to fetch products with bids");
       return response.json();
     }
   });
@@ -275,7 +287,7 @@ export default function BusinessDashboard() {
             <h2 className="text-xl font-semibold text-gray-900">Your Active Bids</h2>
           </div>
 
-          {bidsLoading ? (
+          {bidsLoading || productsWithBidsLoading ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -288,47 +300,55 @@ export default function BusinessDashboard() {
             <Card>
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
                 <ul className="divide-y divide-gray-200">
-                  {activeBids.map((bid) => (
-                    <li key={bid.id}>
-                      <div className="px-4 py-4 sm:px-6">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium text-primary truncate">
-                            Item ID: {bid.itemId} ({bid.itemType})
-                          </h3>
-                          <div className="ml-2 flex-shrink-0 flex">
-                            <Badge variant={getBidStatusBadge(bid.status).variant}>
-                              {getBidStatusBadge(bid.status).label}
-                            </Badge>
+                  {activeBids.map((bid) => {
+                    // Fetch additional item details if available from the productsWithBids collection
+                    // to ensure we only show details of products where this business has placed bids
+                    const itemDetails = bid.itemType === "product" ? 
+                      productsWithBids?.find(product => product.id === bid.itemId) : 
+                      { name: `Item ID: ${bid.itemId}` };
+
+                    return (
+                      <li key={bid.id}>
+                        <div className="px-4 py-4 sm:px-6">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-medium text-primary truncate">
+                              {itemDetails?.name || `Item ID: ${bid.itemId}`} ({bid.itemType})
+                            </h3>
+                            <div className="ml-2 flex-shrink-0 flex">
+                              <Badge variant={getBidStatusBadge(bid.status).variant}>
+                                {getBidStatusBadge(bid.status).label}
+                              </Badge>
+                            </div>
                           </div>
+                          <div className="mt-2 sm:flex sm:justify-between">
+                            <div className="sm:flex">
+                              <p className="flex items-center text-sm text-gray-500">
+                                <Tag className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                                Your bid: ₹{bid.amount}
+                              </p>
+                              <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                                <User className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                                Customer ID: {bid.itemId}
+                              </p>
+                            </div>
+                            <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                              <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                              <p>
+                                Bid placed on <time dateTime={bid.createdAt}>{formatDate(bid.createdAt)}</time>
+                              </p>
+                            </div>
+                          </div>
+                          {bid.status === "accepted" && (
+                            <div className="mt-2">
+                              <Button variant="link" size="sm" className="p-0 h-auto">
+                                Customer Details <ArrowRight className="h-4 w-4 ml-1" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        <div className="mt-2 sm:flex sm:justify-between">
-                          <div className="sm:flex">
-                            <p className="flex items-center text-sm text-gray-500">
-                              <Tag className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                              Your bid: ₹{bid.amount}
-                            </p>
-                            <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                              <User className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                              Customer ID: {bid.itemId}
-                            </p>
-                          </div>
-                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                            <p>
-                              Bid placed on <time dateTime={bid.createdAt}>{formatDate(bid.createdAt)}</time>
-                            </p>
-                          </div>
-                        </div>
-                        {bid.status === "accepted" && (
-                          <div className="mt-2">
-                            <Button variant="link" size="sm" className="p-0 h-auto">
-                              Customer Details <ArrowRight className="h-4 w-4 ml-1" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </Card>
