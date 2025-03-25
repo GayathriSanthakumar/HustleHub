@@ -64,17 +64,34 @@ export function BidStatusNotification({ businessId }: BidNotificationProps) {
       });
     }
     
-    // Find rejected bids that can be revived (replaced by lower bids)
-    const rejectedBids = bids.filter(bid => 
+    // Find rejected bids that were replaced by lower bids
+    const replacedBids = bids.filter(bid => 
       bid.status === "rejected" && bid.replacedBy !== null
     );
     
-    if (rejectedBids.length > 0) {
-      rejectedBids.forEach(bid => {
+    if (replacedBids.length > 0) {
+      replacedBids.forEach(bid => {
         newNotifications.push({
-          id: `rejected-${bid.id}`,
+          id: `replaced-${bid.id}`,
           type: "replaced",
           message: `Your bid #${bid.id} was replaced by a lower bid. You can submit an improved offer.`,
+          bid: bid,
+          timestamp: new Date(bid.createdAt)
+        });
+      });
+    }
+    
+    // Find directly rejected bids (without being replaced)
+    const directlyRejectedBids = bids.filter(bid => 
+      bid.status === "rejected" && bid.replacedBy === null
+    );
+    
+    if (directlyRejectedBids.length > 0) {
+      directlyRejectedBids.forEach(bid => {
+        newNotifications.push({
+          id: `rejected-${bid.id}`,
+          type: "rejected",
+          message: `Your bid #${bid.id} was rejected. You can submit a new offer.`,
           bid: bid,
           timestamp: new Date(bid.createdAt)
         });
@@ -91,11 +108,25 @@ export function BidStatusNotification({ businessId }: BidNotificationProps) {
       
       // Show toast for new notifications
       newUniqueNotifications.forEach(notification => {
-        toast({
-          title: notification.type === "accepted" ? "Bid Accepted!" : "Bid Replaced",
+        const toastData = {
+          title: "Bid Status Update",
           description: notification.message,
-          variant: notification.type === "accepted" ? "default" : "destructive",
-        });
+          variant: "default" as const
+        };
+        
+        // Customize based on notification type
+        if (notification.type === "accepted") {
+          toastData.title = "Bid Accepted!";
+          toastData.variant = "default" as const;
+        } else if (notification.type === "replaced") {
+          toastData.title = "Bid Replaced";
+          toastData.variant = "destructive" as const;
+        } else if (notification.type === "rejected") {
+          toastData.title = "Bid Rejected";
+          toastData.variant = "secondary" as const;
+        }
+        
+        toast(toastData);
       });
     }
   };
@@ -167,15 +198,27 @@ export function BidStatusNotification({ businessId }: BidNotificationProps) {
                     </div>
                     
                     <div className="flex items-center justify-between mt-2">
-                      <Badge variant={notification.type === "accepted" ? "success" : "secondary"}>
-                        {notification.type === "accepted" ? "Accepted" : "Replaced"}
+                      <Badge 
+                        variant={
+                          notification.type === "accepted" ? "success" : 
+                          notification.type === "replaced" ? "destructive" : 
+                          "secondary"
+                        }
+                      >
+                        {notification.type === "accepted" ? "Accepted" : 
+                         notification.type === "replaced" ? "Replaced" : "Rejected"}
                       </Badge>
                       
                       <div className="flex gap-2">
-                        {notification.type === "replaced" && (
-                          <Button variant="outline" size="sm" className="h-8" onClick={() => handleReviveBid(notification.bid)}>
+                        {(notification.type === "replaced" || notification.type === "rejected") && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className={`h-8 ${notification.type === "replaced" ? "bg-primary text-white hover:bg-primary/90" : ""}`} 
+                            onClick={() => handleReviveBid(notification.bid)}
+                          >
                             <RefreshCw className="h-3 w-3 mr-1" />
-                            Improve
+                            {notification.type === "replaced" ? "Improve" : "New Offer"}
                           </Button>
                         )}
                         <Button variant="ghost" size="sm" className="h-8" onClick={() => clearNotification(notification.id)}>

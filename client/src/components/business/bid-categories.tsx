@@ -218,6 +218,7 @@ export function BidCategories() {
                             </div>
                           )}
                           
+                          {/* Show for replaced bids */}
                           {bid.status === "rejected" && bid.replacedBy && (
                             <div className="mt-2 flex items-center justify-between">
                               <div className="flex items-center text-sm text-red-600">
@@ -228,9 +229,27 @@ export function BidCategories() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleReviveBid(bid)}
-                                className="text-xs h-8"
+                                className="text-xs h-8 bg-primary text-white hover:bg-primary/90"
                               >
                                 Improve Offer
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {/* Show for directly rejected bids (without replacement) */}
+                          {bid.status === "rejected" && !bid.replacedBy && !isPostCompleted && (
+                            <div className="mt-2 flex items-center justify-between">
+                              <div className="flex items-center text-sm text-amber-600">
+                                <AlertCircle className="h-4 w-4 mr-1" />
+                                Bid was rejected
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleReviveBid(bid)}
+                                className="text-xs h-8"
+                              >
+                                Submit New Offer
                               </Button>
                             </div>
                           )}
