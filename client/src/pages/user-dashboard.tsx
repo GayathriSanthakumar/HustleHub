@@ -216,20 +216,30 @@ export default function UserDashboard() {
 
   // Update bid status mutation
   const updateBidMutation = useMutation({
-    mutationFn: async ({ bidId, status }: { bidId: number, status: string }) => {
+    mutationFn: async ({ bidId, status, itemType = "product" }: { bidId: number, status: string, itemType?: "product" | "job" }) => {
       const response = await apiRequest("PATCH", `/api/bids/${bidId}/status`, { status });
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bids/item", selectedProductId, "product"] });
+    onSuccess: (_, variables) => {
+      // Invalidate the appropriate queries based on the item type
+      if (variables.itemType === "job") {
+        queryClient.invalidateQueries({ queryKey: ["/api/bids/item", selectedJob?.id, "job"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/jobs/user"] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/bids/item", selectedProductId, "product"] });
+      }
+      
+      const statusText = variables.status === "accepted" ? "accepted" : "rejected";
+      const itemText = variables.itemType === "job" ? "applicant" : "bid";
+      
       toast({
-        title: "Bid updated successfully",
-        description: "The bid status has been updated",
+        title: `${itemText.charAt(0).toUpperCase() + itemText.slice(1)} ${statusText}`,
+        description: `The ${itemText} has been ${statusText}`,
       });
     },
     onError: (error) => {
       toast({
-        title: "Failed to update bid",
+        title: "Failed to update status",
         description: error.message,
         variant: "destructive",
       });
