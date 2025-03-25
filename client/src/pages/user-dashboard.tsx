@@ -79,7 +79,7 @@ export default function UserDashboard() {
     return "service-accept";
   };
 
-  // Load jobs (excluding the current user's jobs)
+  // Load jobs from other users for the Service Accept tab (jobs not created by current user)
   const { data: availableJobs, isLoading: jobsLoading } = useQuery({
     queryKey: ["/api/jobs"],
     queryFn: async () => {
@@ -88,7 +88,9 @@ export default function UserDashboard() {
       });
       if (!response.ok) throw new Error("Failed to fetch jobs");
       const jobs = await response.json();
-      // Filter out jobs created by the current user
+      
+      // Double-check that we're only showing jobs created by other users (not the current user)
+      // This ensures proper separation between Service Accept and Service Post tabs
       return jobs.filter((job: any) => job.userId !== user?.id);
     },
     enabled: !!user

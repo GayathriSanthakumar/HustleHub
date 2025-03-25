@@ -148,10 +148,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Job endpoints
-  app.get("/api/jobs", async (req, res) => {
+  app.get("/api/jobs", isAuthenticated, async (req, res) => {
     try {
+      // Get all jobs
       const jobs = await storage.getAllJobs();
-      res.json(jobs);
+      
+      // Filter out jobs created by the current user
+      const filteredJobs = jobs.filter(job => job.userId !== req.user.id);
+      
+      res.json(filteredJobs);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }
