@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { JobModal } from "@/components/modals/job-modal";
 import { ProductModal } from "@/components/modals/product-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StartChatButton } from "@/components/chat/start-chat-button";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Dialog, 
   DialogContent, 
@@ -25,7 +27,6 @@ import {
 } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
 import { 
   Calendar, 
   ArrowRight, 
