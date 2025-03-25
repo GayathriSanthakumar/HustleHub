@@ -590,12 +590,24 @@ export default function UserDashboard() {
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (
-                <Card key={product.id} className="bg-white overflow-hidden shadow rounded-lg">
+                <Card 
+                  key={product.id} 
+                  className={`bg-white overflow-hidden shadow rounded-lg ${
+                    product.status === "completed" ? "bg-gray-50 border-2 border-gray-200" : ""
+                  }`}
+                >
+                  {product.status === "completed" && (
+                    <div className="bg-gray-200 text-gray-600 text-center py-1 text-xs font-medium">
+                      COMPLETED
+                    </div>
+                  )}
                   <CardContent className="p-4">
                     {product.imagePath && (
                       <div className="aspect-w-16 aspect-h-9 mb-4">
                         <img 
-                          className="object-cover shadow-sm rounded-md" 
+                          className={`object-cover shadow-sm rounded-md ${
+                            product.status === "completed" ? "opacity-75" : ""
+                          }`}
                           src={product.imagePath} 
                           alt={product.name} 
                         />
@@ -612,8 +624,13 @@ export default function UserDashboard() {
                         size="sm" 
                         className="p-0 h-auto"
                         onClick={() => setSelectedProductId(product.id)}
+                        disabled={product.status === "completed"}
                       >
-                        View Offers <ArrowRight className="h-4 w-4 ml-1" />
+                        {product.status === "completed" ? (
+                          <span className="text-gray-500">Completed</span>
+                        ) : (
+                          <>View Offers <ArrowRight className="h-4 w-4 ml-1" /></>
+                        )}
                       </Button>
                     </div>
                   </CardContent>
@@ -1306,6 +1323,66 @@ export default function UserDashboard() {
             <ReviveBidForm onSubmit={handleReviveBidSubmit} onCancel={() => setReviveBidDialogOpen(false)} />
           )}
         
+        </DialogContent>
+      </Dialog>
+
+      {/* End Post Confirmation Dialog */}
+      <Dialog open={endPostDialogOpen} onOpenChange={setEndPostDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">End Product Request</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to end this product request? This will mark it as completed and prevent any new bids.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {productToEnd && (
+            <div className="space-y-4">
+              <div className="p-4 border rounded-lg bg-gray-50">
+                <h3 className="text-md font-medium text-gray-900 mb-2">
+                  {getProduct(productToEnd)?.name}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {getProduct(productToEnd)?.description}
+                </p>
+              </div>
+              
+              <div className="p-4 border rounded-lg bg-yellow-50 border-yellow-200">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Clock className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-yellow-800">Important Note</h3>
+                    <div className="mt-2 text-sm text-yellow-700">
+                      <p>Ending this post will:</p>
+                      <ul className="list-disc pl-5 mt-1 space-y-1">
+                        <li>Mark the product request as completed</li>
+                        <li>Prevent new bids from being placed</li>
+                        <li>Keep all accepted bids visible for reference</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button
+                  variant="destructive"
+                  onClick={confirmEndPost}
+                  disabled={endPostMutation.isPending}
+                >
+                  {endPostMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
+                  End Post
+                </Button>
+                <Button variant="outline" onClick={() => setEndPostDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
