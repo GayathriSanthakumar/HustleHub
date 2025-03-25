@@ -627,13 +627,28 @@ export default function UserDashboard() {
                         <Badge variant={getStatusBadge(product.status).variant}>
                           {getStatusBadge(product.status).label}
                         </Badge>
-                        {product.status === "open" && (
+                        {product.status !== "completed" && (
                           <div className="text-xs font-medium text-gray-500">
-                            {getLowestBidForProduct(product.id) ? (
-                              <span className="text-green-600">Lowest bid: ₹{getLowestBidForProduct(product.id)}</span>
+                            {product.lowestBidAmount ? (
+                              <span className="text-green-600 font-semibold">
+                                Lowest bid: ₹{product.lowestBidAmount}
+                              </span>
                             ) : (
                               <span>No bids yet</span>
                             )}
+                          </div>
+                        )}
+                        
+                        {product.lowestBidAmount && product.lowestBidImagePath && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-1">Sample from lowest bidder:</p>
+                            <div className="h-16 w-16 rounded overflow-hidden border border-gray-200">
+                              <img 
+                                src={product.lowestBidImagePath} 
+                                alt="Lowest bid sample" 
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
                           </div>
                         )}
                       </div>

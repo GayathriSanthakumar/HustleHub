@@ -293,8 +293,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products", async (req, res) => {
     try {
       const products = await storage.getAllProducts();
-      res.json(products);
+      
+      // Fetch bids for each product to enhance the response with bid information
+      const enhancedProducts = await Promise.all(products.map(async (product) => {
+        const bids = await storage.getBidsByItem(product.id, "product");
+        
+        // Calculate the lowest bid amount
+        let lowestBid = null;
+        let lowestBidAmount = null;
+        let lowestBidImagePath = null;
+        
+        if (bids.length > 0) {
+          // Find the lowest bid (active or accepted)
+          const pendingAndAcceptedBids = bids.filter(b => 
+            b.status === "pending" || b.status === "accepted"
+          );
+          
+          if (pendingAndAcceptedBids.length > 0) {
+            lowestBid = pendingAndAcceptedBids.reduce((min, bid) => 
+              bid.amount < min.amount ? bid : min, pendingAndAcceptedBids[0]
+            );
+            
+            lowestBidAmount = lowestBid.amount;
+            lowestBidImagePath = lowestBid.imagePath;
+          }
+        }
+        
+        return {
+          ...product,
+          bidCount: bids.length,
+          lowestBidAmount,
+          lowestBidImagePath
+        };
+      }));
+      
+      res.json(enhancedProducts);
     } catch (error) {
+      console.error("Error fetching products with bid info:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
@@ -644,7 +679,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Mark them as replaced
           for (const higherBid of higherAcceptedBids) {
+            console.log(`Marking bid #${higherBid.id} as replaced by lower bid #${bid.id}`);
+            
+            // Explicitly mark the bid as replaced by setting its replacedBy field to the new bid's ID
             await storage.updateBidStatus(higherBid.id, "rejected", bid.id);
+          }
+          
+          // If user is accepting a bid that is higher than previous bids, warn them
+          const lowerPendingBids = allBids.filter(
+            otherBid => otherBid.id !== bid.id && 
+                      otherBid.status === "pending" && 
+                      otherBid.amount < bid.amount
+          );
+          
+          if (lowerPendingBids.length > 0) {
+            // We don't prevent the action, but we return this info in the response
+            updatedBid = {
+              ...updatedBid,
+              _hasLowerBids: true,
+              _lowestBidAmount: Math.min(...lowerPendingBids.map(b => b.amount))
+            };
           }
         }
         
