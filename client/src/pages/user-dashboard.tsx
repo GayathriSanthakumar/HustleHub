@@ -62,6 +62,7 @@ export default function UserDashboard() {
   // End post confirmation dialog
   const [endPostDialogOpen, setEndPostDialogOpen] = useState<boolean>(false);
   const [productToEnd, setProductToEnd] = useState<number | null>(null);
+  const [currentBidId, setCurrentBidId] = useState<number | null>(null);
 
   // Base path mapping
   const tabPaths = {
@@ -306,15 +307,26 @@ export default function UserDashboard() {
         acceptedBusinessIds.push(businessId);
       }
       
+      console.log("Accepting business:", businessId, "for job:", jobId);
+      console.log("Updated acceptedBusinessIds:", acceptedBusinessIds);
+      
       // Update the job with the new list of accepted businesses
       const response = await apiRequest("PATCH", `/api/jobs/${jobId}/accepted-businesses`, { 
         acceptedBusinessIds 
       });
+      
+      // Also update the bid to accepted status
+      await apiRequest("PATCH", `/api/bids/${currentBidId}/status`, { status: "accepted" });
+      
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/bids/item", selectedJob?.id, "job"] });
+      
+      // Refetch job bids to update the UI
+      refetchJobBids();
+      
       toast({
         title: "Business accepted",
         description: "The business has been accepted for this job",
@@ -957,7 +969,11 @@ export default function UserDashboard() {
               ) : (
                 <div className="space-y-4">
                   {jobBids.map((bid) => {
-                    const isAccepted = selectedJob?.acceptedBusinessIds?.includes(bid.businessId);
+                    // Fix issue with acceptedBusinessIds - ensure it's always an array
+                    const acceptedBusinessIds = Array.isArray(selectedJob?.acceptedBusinessIds) 
+                      ? selectedJob.acceptedBusinessIds 
+                      : [];
+                    const isAccepted = acceptedBusinessIds.includes(bid.businessId);
                     const business = jobBidBusinesses?.[bid.businessId];
                     
                     return (
