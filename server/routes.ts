@@ -187,6 +187,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint to update accepted businesses for a job
+  app.patch("/api/jobs/:id/accepted-businesses", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { acceptedBusinessIds } = req.body;
+      
+      if (!Array.isArray(acceptedBusinessIds)) {
+        return res.status(400).json({ message: "acceptedBusinessIds must be an array" });
+      }
+      
+      const job = await storage.getJob(id);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      // Ensure user owns the job
+      if (job.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden: You don't own this job" });
+      }
+      
+      const updatedJob = await storage.updateJobAcceptedBusinesses(id, acceptedBusinessIds);
+      
+      // If the job status is 'open' and businesses are accepted, update it to 'in_progress'
+      if (updatedJob && updatedJob.status === 'open' && acceptedBusinessIds.length > 0) {
+        await storage.updateJobStatus(id, 'in_progress');
+      }
+      
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error updating accepted businesses for job:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   // Product endpoints
   app.get("/api/products", async (req, res) => {
     try {
