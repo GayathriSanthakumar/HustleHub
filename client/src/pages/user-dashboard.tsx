@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JobModal } from "@/components/modals/job-modal";
 import { ProductModal } from "@/components/modals/product-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -719,7 +724,7 @@ export default function UserDashboard() {
                                   .map((bid) => {
                                     const business = bidBusinesses?.[bid.businessId];
                                     return (
-                                      <div key={bid.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 opacity-75">
+                                      <div key={bid.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 opacity-80">
                                         <div className="flex items-center justify-between">
                                           <div className="flex items-center">
                                             <div className="bg-gray-200 h-10 w-10 rounded-full flex items-center justify-center text-gray-500 mr-3">
@@ -740,11 +745,38 @@ export default function UserDashboard() {
                                               <X className="h-3 w-3 mr-1" />
                                               Rejected
                                             </Badge>
+                                            {bid.replacedBy && (
+                                              <p className="text-xs text-gray-500 mt-1">
+                                                Replaced by a better offer
+                                              </p>
+                                            )}
                                           </div>
                                         </div>
+                                        
+                                        {bid.imagePath && (
+                                          <div className="mt-3 relative aspect-video overflow-hidden rounded-md border border-gray-200">
+                                            <img 
+                                              src={bid.imagePath} 
+                                              alt="Bid product" 
+                                              className="object-cover w-full h-full" 
+                                            />
+                                          </div>
+                                        )}
+                                        
                                         <div className="mt-3 p-3 bg-white rounded-md border border-gray-100">
                                           <p className="text-sm text-gray-600">{bid.details}</p>
                                           <p className="mt-2 text-xs text-gray-500">Delivery time: {bid.deliveryTime}</p>
+                                        </div>
+                                        
+                                        <div className="mt-3 flex justify-end">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-primary border-primary hover:bg-primary/10"
+                                            onClick={() => handleReviveBid(bid.id)}
+                                          >
+                                            Revive Bid with New Terms
+                                          </Button>
                                         </div>
                                       </div>
                                     );
