@@ -26,6 +26,7 @@ export interface IStorage {
   getJobsByUser(userId: number): Promise<Job[]>;
   getJob(id: number): Promise<Job | undefined>;
   createJob(job: InsertJob, userId: number): Promise<Job>;
+  updateJob(id: number, updatedJob: Partial<Job>): Promise<Job | undefined>;
   updateJobStatus(id: number, status: string): Promise<Job | undefined>;
   updateJobAcceptedBusinesses(jobId: number, acceptedBusinessIds: number[]): Promise<Job | undefined>;
   getAcceptedJobs(userId: number): Promise<Job[]>;
@@ -157,6 +158,23 @@ export class MemStorage implements IStorage {
   async createJob(job: InsertJob, userId: number): Promise<Job> {
     const id = this.jobId++;
     const newJob: Job = { ...job, id, userId, status: "open", createdAt: new Date(), acceptedBusinessIds: [] };
+    this.jobs.set(id, newJob);
+    return newJob;
+  }
+  
+  async updateJob(id: number, updatedJob: Partial<Job>): Promise<Job | undefined> {
+    const job = this.jobs.get(id);
+    if (!job) return undefined;
+    
+    // Create updated job object while preserving userId and createdAt
+    const { userId, createdAt } = job;
+    const newJob = { 
+      ...job, 
+      ...updatedJob,
+      userId, // Ensure userId doesn't change
+      createdAt // Ensure createdAt doesn't change
+    };
+    
     this.jobs.set(id, newJob);
     return newJob;
   }
