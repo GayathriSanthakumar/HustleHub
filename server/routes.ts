@@ -363,6 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const productData = {
         name: req.body.name,
         description: req.body.description,
+        productLink: req.body.productLink || null,
         imagePath
       };
       

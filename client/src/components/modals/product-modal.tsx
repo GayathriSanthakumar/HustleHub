@@ -33,6 +33,7 @@ export function ProductModal() {
     defaultValues: {
       name: "",
       description: "",
+      productLink: "",
     },
   });
 
@@ -41,6 +42,10 @@ export function ProductModal() {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("description", values.description);
+      
+      if (values.productLink) {
+        formData.append("productLink", values.productLink);
+      }
       
       if (productImage) {
         formData.append("image", productImage);
@@ -123,6 +128,26 @@ export function ProductModal() {
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="productLink"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Link (Optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g. https://www.example.com/product" 
+                      type="url"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Add a link to the product you're looking for
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

@@ -622,6 +622,17 @@ export default function UserDashboard() {
                     )}
                     <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
                     <p className="mt-2 text-sm text-gray-600 line-clamp-3">{product.description}</p>
+                    {product.productLink && (
+                      <a 
+                        href={product.productLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="mt-2 inline-flex items-center text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        <ExternalLink size={12} className="mr-1" />
+                        View Product Link
+                      </a>
+                    )}
                     <div className="mt-4 flex justify-between items-center">
                       <div className="flex flex-col gap-2">
                         <Badge variant={getStatusBadge(product.status).variant}>
