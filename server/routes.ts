@@ -433,6 +433,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Revive a rejected bid with new data
+  app.post("/api/bids/:bidId/revive", isBusinessAccount, async (req, res) => {
+    try {
+      const bidId = parseInt(req.params.bidId);
+      const { amount, deliveryTime, details } = req.body;
+      
+      // Get the original bid
+      const originalBid = await storage.getBid(bidId);
+      
+      if (!originalBid) {
+        return res.status(404).json({ message: "Bid not found" });
+      }
+      
+      // Check if the bid belongs to the authenticated business
+      if (originalBid.businessId !== req.user.id) {
+        return res.status(403).json({ message: "You don't have permission to revive this bid" });
+      }
+      
+      // Check if the bid is in rejected status and replaced by another bid
+      if (originalBid.status !== "rejected" || !originalBid.replacedBy) {
+        return res.status(400).json({ 
+          message: "Only rejected bids that were replaced by another bid can be revived" 
+        });
+      }
+      
+      // Revive the bid with new data
+      const revivedBid = await storage.reviveBid(bidId, {
+        amount,
+        deliveryTime,
+        details: details || null,
+        status: "pending",
+        replacedBy: null
+      });
+      
+      if (!revivedBid) {
+        return res.status(500).json({ message: "Failed to revive bid" });
+      }
+      
+      res.status(200).json(revivedBid);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to revive bid", error: error.message });
+    }
+  });
+  
   // Get product requests where the business has placed bids
   app.get("/api/products/with-bids", isBusinessAccount, async (req, res) => {
     try {

@@ -11,6 +11,7 @@ import { BusinessProductModal } from "@/components/modals/business-product-modal
 import { BidModal } from "@/components/modals/bid-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { BidStatusNotification } from "@/components/business/bid-status-notification";
 import { 
   Edit, 
   Search, 
@@ -159,8 +160,25 @@ export default function BusinessDashboard() {
     return statusMap[status] || { variant: "outline", label: status };
   };
 
+  // Get user ID from the API
+  const { data: userData } = useQuery({
+    queryKey: ["/api/user"],
+    queryFn: async () => {
+      const response = await fetch("/api/user", {
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error("Failed to fetch user data");
+      return response.json();
+    }
+  });
+
   return (
     <DashboardLayout title="Business Dashboard" userType="business">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Business Dashboard</h1>
+        {userData && <BidStatusNotification businessId={userData.id} />}
+      </div>
+      
       <Tabs 
         defaultValue={getInitialTab()} 
         value={selectedTab} 

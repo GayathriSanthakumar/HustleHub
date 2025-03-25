@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bell, Check, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ReviveBidForm } from "@/components/business/revive-bid-form";
 
 interface BidNotificationProps {
   businessId: number;
@@ -99,11 +100,14 @@ export function BidStatusNotification({ businessId }: BidNotificationProps) {
     }
   };
   
+  // State for revive bid modal
+  const [reviveModalOpen, setReviveModalOpen] = useState(false);
+  const [selectedBid, setSelectedBid] = useState<any>(null);
+
   // Handle bid revival
-  const handleReviveBid = async (bidId: number) => {
-    // Navigate to bid revival form or show modal
-    console.log("Reviving bid:", bidId);
-    // Implement navigation to a form where the business can submit an improved offer
+  const handleReviveBid = async (bid: any) => {
+    setSelectedBid(bid);
+    setReviveModalOpen(true);
   };
   
   // Mark notification as read
