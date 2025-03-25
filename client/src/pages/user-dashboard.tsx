@@ -45,8 +45,7 @@ import {
   User,
   Store,
   MapPin,
-  Users,
-  AtSign
+  Users
 } from "lucide-react";
 
 export default function UserDashboard() {
@@ -168,7 +167,7 @@ export default function UserDashboard() {
     enabled: !!productBids && productBids.length > 0
   });
   
-  // Load bids for specific job (used in both job details and post details views)
+  // Load bids for specific job
   const { data: jobBids, isLoading: jobBidsLoading } = useQuery({
     queryKey: ["/api/bids/item", selectedJob?.id, "job"],
     queryFn: async () => {
@@ -179,7 +178,7 @@ export default function UserDashboard() {
       if (!response.ok) throw new Error("Failed to fetch job bids");
       return response.json();
     },
-    enabled: !!selectedJob && (viewPostDetailsOpen || viewJobDetailsOpen)
+    enabled: !!selectedJob && viewPostDetailsOpen
   });
   
   // Load business details for each job bid
@@ -212,7 +211,7 @@ export default function UserDashboard() {
       
       return businessDetails;
     },
-    enabled: !!jobBids && jobBids.length > 0 && (viewPostDetailsOpen || viewJobDetailsOpen)
+    enabled: !!jobBids && jobBids.length > 0 && viewPostDetailsOpen
   });
 
   // Update bid status mutation
@@ -1026,124 +1025,22 @@ export default function UserDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-700">{selectedJob.description}</p>
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-900 mb-1">Contact Information</h4>
-                  <p className="text-sm text-gray-700">{selectedJob.contactInfo}</p>
-                </div>
               </div>
               
-              {/* Applicants section - only shown if the user is the job creator */}
-              {selectedJob.userId === user?.id && (
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-4">Applicants</h3>
-                  
-                  {jobBidsLoading || jobBidBusinessesLoading ? (
-                    <div className="flex justify-center p-6">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                  ) : !jobBids || jobBids.length === 0 ? (
-                    <div className="text-center p-4 border rounded-lg bg-gray-50">
-                      <p className="text-gray-500">No applications received yet.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {jobBids.map((bid) => {
-                        const business = jobBidBusinesses?.[bid.businessId];
-                        const isAccepted = selectedJob?.acceptedBusinessIds?.includes(bid.businessId);
-                        
-                        return (
-                          <div 
-                            key={bid.id} 
-                            className={`p-4 rounded-lg border ${isAccepted ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'}`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center">
-                                <div className={`${isAccepted ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'} h-10 w-10 rounded-full flex items-center justify-center mr-3`}>
-                                  <Store className="h-5 w-5" />
-                                </div>
-                                <div>
-                                  <h4 className="font-medium text-gray-900">{business?.businessName || 'Business'}</h4>
-                                  <p className="text-sm text-gray-600">
-                                    {business?.fullName || business?.username}
-                                  </p>
-                                </div>
-                              </div>
-                              {isAccepted && (
-                                <Badge variant="success" className="ml-2">
-                                  Accepted
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {business && (
-                                <>
-                                  <div className="flex items-center text-sm">
-                                    <AtSign className="h-4 w-4 mr-1.5 text-gray-400" />
-                                    <span className="text-gray-600">{business.email}</span>
-                                  </div>
-                                  {business.shopLocation && (
-                                    <div className="flex items-center text-sm">
-                                      <MapPin className="h-4 w-4 mr-1.5 text-gray-400" />
-                                      <span className="text-gray-600">{business.shopLocation}</span>
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                              
-                              {bid.details && (
-                                <div className="col-span-2 mt-2">
-                                  <p className="text-sm text-gray-700 whitespace-pre-line">{bid.details}</p>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {selectedJob.userId === user?.id && !isAccepted && (
-                              <div className="mt-4 flex justify-end space-x-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  className="text-green-600 hover:text-green-700 border-green-200 hover:border-green-300 hover:bg-green-50"
-                                  onClick={() => acceptBusinessMutation.mutate({ 
-                                    jobId: selectedJob.id, 
-                                    businessId: bid.businessId 
-                                  })}
-                                  disabled={acceptBusinessMutation.isPending}
-                                >
-                                  {acceptBusinessMutation.isPending ? (
-                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                  ) : (
-                                    <Check className="h-4 w-4 mr-1" />
-                                  )}
-                                  Accept
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-              
               <DialogFooter>
-                {/* Only show Apply button if the user is not the job creator */}
-                {selectedJob.userId !== user?.id && (
-                  <Button 
-                    onClick={() => {
-                      // Close this dialog and open the bid modal
-                      setViewJobDetailsOpen(false);
-                      // If there was a place to bid on jobs, we would redirect there
-                      toast({
-                        title: "Apply For Job",
-                        description: "To apply for this job, please log in as a business account.",
-                      });
-                    }}
-                  >
-                    Apply for this Job
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => {
+                    // Close this dialog and open the bid modal
+                    setViewJobDetailsOpen(false);
+                    // If there was a place to bid on jobs, we would redirect there
+                    toast({
+                      title: "Apply For Job",
+                      description: "To apply for this job, please log in as a business account.",
+                    });
+                  }}
+                >
+                  Apply for this Job
+                </Button>
                 <Button variant="outline" onClick={() => setViewJobDetailsOpen(false)}>
                   Close
                 </Button>
