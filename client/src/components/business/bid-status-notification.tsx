@@ -173,7 +173,7 @@ export function BidStatusNotification({ businessId }: BidNotificationProps) {
                       
                       <div className="flex gap-2">
                         {notification.type === "replaced" && (
-                          <Button variant="outline" size="sm" className="h-8" onClick={() => handleReviveBid(notification.bid.id)}>
+                          <Button variant="outline" size="sm" className="h-8" onClick={() => handleReviveBid(notification.bid)}>
                             <RefreshCw className="h-3 w-3 mr-1" />
                             Improve
                           </Button>
@@ -189,6 +189,22 @@ export function BidStatusNotification({ businessId }: BidNotificationProps) {
             </Accordion>
           </CardContent>
         </Card>
+      )}
+      
+      {/* Revive Bid Form Modal */}
+      {selectedBid && (
+        <ReviveBidForm
+          bidId={selectedBid.id}
+          originalBid={selectedBid}
+          isOpen={reviveModalOpen}
+          onClose={() => {
+            setReviveModalOpen(false);
+            setSelectedBid(null);
+            
+            // Refresh bids data
+            queryClient.invalidateQueries(["/api/bids/business"]);
+          }}
+        />
       )}
     </div>
   );
