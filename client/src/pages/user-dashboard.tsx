@@ -167,7 +167,7 @@ export default function UserDashboard() {
     enabled: !!productBids && productBids.length > 0
   });
   
-  // Load bids for specific job
+  // Load bids for specific job (used in both job details and post details views)
   const { data: jobBids, isLoading: jobBidsLoading } = useQuery({
     queryKey: ["/api/bids/item", selectedJob?.id, "job"],
     queryFn: async () => {
@@ -178,7 +178,7 @@ export default function UserDashboard() {
       if (!response.ok) throw new Error("Failed to fetch job bids");
       return response.json();
     },
-    enabled: !!selectedJob && viewPostDetailsOpen
+    enabled: !!selectedJob && (viewPostDetailsOpen || viewJobDetailsOpen)
   });
   
   // Load business details for each job bid
@@ -211,7 +211,7 @@ export default function UserDashboard() {
       
       return businessDetails;
     },
-    enabled: !!jobBids && jobBids.length > 0 && viewPostDetailsOpen
+    enabled: !!jobBids && jobBids.length > 0 && (viewPostDetailsOpen || viewJobDetailsOpen)
   });
 
   // Update bid status mutation
