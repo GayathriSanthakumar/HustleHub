@@ -864,7 +864,7 @@ export default function UserDashboard() {
                                             <StartChatButton
                                               businessId={bid.businessId}
                                               userId={user?.id || 0}
-                                              itemId={product.id}
+                                              itemId={bid.itemId}
                                               itemType="product"
                                               disabled={!user}
                                             />
