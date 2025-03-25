@@ -292,12 +292,24 @@ export default function BusinessDashboard() {
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredRequests.map((request) => (
-                <Card key={request.id} className="bg-white overflow-hidden shadow rounded-lg">
+                <Card 
+                  key={request.id} 
+                  className={`bg-white overflow-hidden shadow rounded-lg ${
+                    request.status === "completed" ? "bg-gray-50 border-2 border-gray-200" : ""
+                  }`}
+                >
+                  {request.status === "completed" && (
+                    <div className="bg-gray-200 text-gray-600 text-center py-1 text-xs font-medium">
+                      COMPLETED
+                    </div>
+                  )}
                   <CardContent className="p-4">
                     {request.imagePath && (
                       <div className="aspect-w-16 aspect-h-9 mb-4">
                         <img 
-                          className="object-cover shadow-sm rounded-md" 
+                          className={`object-cover shadow-sm rounded-md ${
+                            request.status === "completed" ? "opacity-75" : ""
+                          }`}
                           src={request.imagePath} 
                           alt={request.name} 
                         />
@@ -326,9 +338,11 @@ export default function BusinessDashboard() {
                           Place Bid
                         </Button>
                       ) : request.status === "completed" ? (
-                        <Badge variant="outline" className="text-gray-500">
-                          Bidding Closed
-                        </Badge>
+                        <div className="flex items-center text-gray-500 text-sm">
+                          <Badge variant="outline" className="text-gray-500">
+                            Bidding Closed
+                          </Badge>
+                        </div>
                       ) : null}
                     </div>
                   </CardContent>
