@@ -1207,78 +1207,88 @@ export default function UserDashboard() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Form
-              {...useForm<z.infer<typeof bidRevivalSchema>>({
-                resolver: zodResolver(bidRevivalSchema),
-                defaultValues: {
-                  amount: 0,
-                  deliveryTime: ""
-                }
-              })}
-              onSubmit={handleReviveBidSubmit}
-            >
-              {({ control, formState }) => (
-                <div className="space-y-6">
-                  <FormField
-                    control={register}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Amount (₹)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Enter new amount"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage>{formState.errors.amount?.message}</FormMessage>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={register}
-                    name="deliveryTime"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Delivery Time</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="e.g. 1 week, 3 days, etc."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage>{formState.errors.deliveryTime?.message}</FormMessage>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <DialogFooter>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setReviveBidDialogOpen(false)}
-                      type="button"
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit"
-                      disabled={formState.isSubmitting}
-                    >
-                      {formState.isSubmitting ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : null}
-                      Submit New Bid
-                    </Button>
-                  </DialogFooter>
-                </div>
-              )}
-            </Form>
+            <ReviveBidForm onSubmit={handleReviveBidSubmit} onCancel={() => setReviveBidDialogOpen(false)} />
           )}
+        
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+  );
+}
+
+// ReviveBidForm Component
+interface ReviveBidFormProps {
+  onSubmit: (data: { amount: number; deliveryTime: string }) => void;
+  onCancel: () => void;
+}
+
+function ReviveBidForm({ onSubmit, onCancel }: ReviveBidFormProps) {
+  const form = useForm<z.infer<typeof bidRevivalSchema>>({
+    resolver: zodResolver(bidRevivalSchema),
+    defaultValues: {
+      amount: 0,
+      deliveryTime: ""
+    }
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>New Amount (₹)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Enter new amount"
+                  {...field}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage>{form.formState.errors.amount?.message}</FormMessage>
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="deliveryTime"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>New Delivery Time</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="e.g. 1 week, 3 days, etc."
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage>{form.formState.errors.deliveryTime?.message}</FormMessage>
+            </FormItem>
+          )}
+        />
+        
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={onCancel}
+            type="button"
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : null}
+            Submit New Bid
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
