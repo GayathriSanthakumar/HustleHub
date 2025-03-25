@@ -952,11 +952,15 @@ export default function UserDashboard() {
                             <div className="space-y-1">
                               <div className="flex items-center">
                                 <Phone className="h-4 w-4 mr-2 text-gray-500" />
-                                <span className="text-sm">{business?.businessDetails?.shopLocation || "No phone provided"}</span>
+                                <span className="text-sm">{business?.businessDetails?.phoneNumber || business?.phoneNumber || "No phone provided"}</span>
                               </div>
                               <div className="flex items-center">
                                 <Mail className="h-4 w-4 mr-2 text-gray-500" />
                                 <span className="text-sm">{business?.email || "No email provided"}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+                                <span className="text-sm">{business?.businessDetails?.shopLocation || "No location provided"}</span>
                               </div>
                             </div>
                           </div>
@@ -974,7 +978,7 @@ export default function UserDashboard() {
                                 jobId: selectedJob?.id || 0, 
                                 businessId: bid.businessId 
                               })}
-                              disabled={acceptBusinessMutation.isPending}
+                              disabled={acceptBusinessMutation.isPending || updateBidMutation.isPending}
                             >
                               {acceptBusinessMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -982,6 +986,24 @@ export default function UserDashboard() {
                                 <Check className="h-4 w-4 mr-1" />
                               )}
                               Accept Applicant
+                            </Button>
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              className="border-red-600 text-red-600 hover:bg-red-50"
+                              onClick={() => updateBidMutation.mutate({ 
+                                bidId: bid.id, 
+                                status: "rejected",
+                                itemType: "job" 
+                              })}
+                              disabled={acceptBusinessMutation.isPending || updateBidMutation.isPending}
+                            >
+                              {updateBidMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <X className="h-4 w-4 mr-1" />
+                              )}
+                              Reject Applicant
                             </Button>
                           </div>
                         )}
