@@ -20,8 +20,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { 
-  MapPin, 
-  Users, 
   Calendar, 
   ArrowRight, 
   Loader2, 
@@ -31,7 +29,10 @@ import {
   Edit,
   Phone,
   Mail,
-  User
+  User,
+  Store,
+  MapPin,
+  Users
 } from "lucide-react";
 
 export default function UserDashboard() {
