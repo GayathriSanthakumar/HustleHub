@@ -8,6 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { JobModal } from "@/components/modals/job-modal";
 import { ProductModal } from "@/components/modals/product-modal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter 
+} from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -19,7 +27,11 @@ import {
   Loader2, 
   Check, 
   X, 
-  Clock
+  Clock,
+  Edit,
+  Phone,
+  Mail,
+  User
 } from "lucide-react";
 
 export default function UserDashboard() {
@@ -28,6 +40,12 @@ export default function UserDashboard() {
   const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState<string>("service-accept");
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  
+  // Dialog states
+  const [viewJobDetailsOpen, setViewJobDetailsOpen] = useState<boolean>(false);
+  const [editJobDetailsOpen, setEditJobDetailsOpen] = useState<boolean>(false);
+  const [viewPostDetailsOpen, setViewPostDetailsOpen] = useState<boolean>(false);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
 
   // Base path mapping
   const tabPaths = {
@@ -92,6 +110,20 @@ export default function UserDashboard() {
     },
     enabled: !!selectedProductId
   });
+  
+  // Load bids for specific job
+  const { data: jobBids, isLoading: jobBidsLoading } = useQuery({
+    queryKey: ["/api/bids/item", selectedJob?.id, "job"],
+    queryFn: async () => {
+      if (!selectedJob) return [];
+      const response = await fetch(`/api/bids/item/${selectedJob.id}/job`, {
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error("Failed to fetch job bids");
+      return response.json();
+    },
+    enabled: !!selectedJob && viewPostDetailsOpen
+  });
 
   // Update bid status mutation
   const updateBidMutation = useMutation({
@@ -132,6 +164,63 @@ export default function UserDashboard() {
     onError: (error) => {
       toast({
         title: "Failed to end post",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Update job status mutation
+  const updateJobStatusMutation = useMutation({
+    mutationFn: async ({ jobId, status }: { jobId: number, status: string }) => {
+      const response = await apiRequest("PATCH", `/api/jobs/${jobId}/status`, { status });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs/user"] });
+      toast({
+        title: "Job status updated",
+        description: "The job status has been successfully updated",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update job status",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Accept business for job mutation
+  const acceptBusinessMutation = useMutation({
+    mutationFn: async ({ jobId, businessId }: { jobId: number, businessId: number }) => {
+      // Get the current job first to get existing accepted businesses
+      const job = await apiRequest("GET", `/api/jobs/${jobId}`).then(res => res.json());
+      
+      // Add the new business ID to the list if not already present
+      const acceptedBusinessIds = Array.isArray(job.acceptedBusinessIds) ? job.acceptedBusinessIds : [];
+      if (!acceptedBusinessIds.includes(businessId)) {
+        acceptedBusinessIds.push(businessId);
+      }
+      
+      // Update the job with the new list of accepted businesses
+      const response = await apiRequest("PATCH", `/api/jobs/${jobId}/accepted-businesses`, { 
+        acceptedBusinessIds 
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/item", selectedJob?.id, "job"] });
+      toast({
+        title: "Business accepted",
+        description: "The business has been accepted for this job",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to accept business",
         description: error.message,
         variant: "destructive",
       });
@@ -223,7 +312,15 @@ export default function UserDashboard() {
                       <Badge variant={getStatusBadge(job.status).variant}>
                         {getStatusBadge(job.status).label}
                       </Badge>
-                      <Button variant="link" size="sm" className="p-0 h-auto">
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="p-0 h-auto"
+                        onClick={() => {
+                          setSelectedJob(job);
+                          setViewJobDetailsOpen(true);
+                        }}
+                      >
                         View Details <ArrowRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
@@ -286,10 +383,26 @@ export default function UserDashboard() {
                           </div>
                         </div>
                         <div className="mt-2 flex space-x-4">
-                          <Button variant="link" size="sm" className="p-0 h-auto">
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="p-0 h-auto"
+                            onClick={() => {
+                              setSelectedJob(job);
+                              setEditJobDetailsOpen(true);
+                            }}
+                          >
                             Edit Details <Edit className="h-4 w-4 ml-1" />
                           </Button>
-                          <Button variant="link" size="sm" className="p-0 h-auto">
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="p-0 h-auto"
+                            onClick={() => {
+                              setSelectedJob(job);
+                              setViewPostDetailsOpen(true);
+                            }}
+                          >
                             View Post <ArrowRight className="h-4 w-4 ml-1" />
                           </Button>
                         </div>
@@ -461,6 +574,264 @@ export default function UserDashboard() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* View Post Details Dialog */}
+      <Dialog open={viewPostDetailsOpen} onOpenChange={setViewPostDetailsOpen}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Job Post Details</DialogTitle>
+            <DialogDescription>
+              View applicants and their contact information for this job
+            </DialogDescription>
+          </DialogHeader>
+          
+          {jobBidsLoading ? (
+            <div className="flex justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <>
+              <div className="p-4 border rounded-lg bg-gray-50 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{selectedJob?.title}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-1.5 text-gray-400" />
+                    <span className="text-sm text-gray-700">{selectedJob?.location} (within {selectedJob?.radius || 5}km)</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1.5 text-gray-400" />
+                    <span className="text-sm text-gray-700">Posted on {selectedJob?.createdAt ? formatDate(selectedJob.createdAt) : 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Users className="h-4 w-4 mr-1.5 text-gray-400" />
+                    <span className="text-sm text-gray-700">{selectedJob?.membersNeeded} members needed</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Badge variant={selectedJob ? getStatusBadge(selectedJob.status).variant : "outline"}>
+                      {selectedJob ? getStatusBadge(selectedJob.status).label : "Unknown"}
+                    </Badge>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 mb-4">{selectedJob?.description}</p>
+              </div>
+              
+              <h4 className="font-medium text-base mb-4">Applicants</h4>
+              
+              {(!jobBids || jobBids.length === 0) ? (
+                <div className="text-center p-6 border rounded-lg bg-gray-50">
+                  <p className="text-gray-500">No applicants for this job yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {jobBids.map((bid) => {
+                    const isAccepted = selectedJob?.acceptedBusinessIds?.includes(bid.businessId);
+                    
+                    return (
+                      <div key={bid.id} className={`p-4 rounded-lg border ${isAccepted ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center">
+                            <User className="h-5 w-5 mr-2 text-gray-500" />
+                            <h5 className="font-medium">Business #{bid.businessId}</h5>
+                            {isAccepted && (
+                              <Badge variant="success" className="ml-2">
+                                <Check className="h-3 w-3 mr-1" />
+                                Accepted
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="text-lg font-bold text-gray-900">₹{bid.amount}</span>
+                        </div>
+                        
+                        <p className="text-sm text-gray-700 mb-3">{bid.details}</p>
+                        
+                        {/* Contact information - only shown if accepted */}
+                        {isAccepted && (
+                          <div className="mt-3 p-3 bg-white rounded border border-green-100">
+                            <h6 className="font-medium text-sm text-gray-900 mb-2">Contact Information</h6>
+                            {bid.contactInfo ? (
+                              <div className="space-y-1">
+                                <div className="flex items-center">
+                                  <Phone className="h-4 w-4 mr-2 text-gray-500" />
+                                  <span className="text-sm">{bid.contactInfo.phone || "No phone provided"}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Mail className="h-4 w-4 mr-2 text-gray-500" />
+                                  <span className="text-sm">{bid.contactInfo.email || "No email provided"}</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">No contact information available.</p>
+                            )}
+                          </div>
+                        )}
+                        
+                        {!isAccepted && bid.status === "pending" && (
+                          <div className="mt-3 flex space-x-2">
+                            <Button 
+                              size="sm"
+                              variant="default"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => acceptBusinessMutation.mutate({ 
+                                jobId: selectedJob?.id || 0, 
+                                businessId: bid.businessId 
+                              })}
+                              disabled={acceptBusinessMutation.isPending}
+                            >
+                              {acceptBusinessMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Check className="h-4 w-4 mr-1" />
+                              )}
+                              Accept Applicant
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setViewPostDetailsOpen(false)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Job Details Dialog for services available section */}
+      <Dialog open={viewJobDetailsOpen} onOpenChange={setViewJobDetailsOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Job Details</DialogTitle>
+            <DialogDescription>
+              Detailed information about this job posting
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedJob && (
+            <div className="space-y-4">
+              <div className="p-4 border rounded-lg bg-gray-50">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{selectedJob.title}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-1.5 text-gray-400" />
+                    <span className="text-sm text-gray-700">{selectedJob.location} (within {selectedJob.radius || 5}km)</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1.5 text-gray-400" />
+                    <span className="text-sm text-gray-700">Posted on {formatDate(selectedJob.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Users className="h-4 w-4 mr-1.5 text-gray-400" />
+                    <span className="text-sm text-gray-700">{selectedJob.membersNeeded} members needed</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Badge variant={getStatusBadge(selectedJob.status).variant}>
+                      {getStatusBadge(selectedJob.status).label}
+                    </Badge>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700">{selectedJob.description}</p>
+              </div>
+              
+              <DialogFooter>
+                <Button 
+                  onClick={() => {
+                    // Close this dialog and open the bid modal
+                    setViewJobDetailsOpen(false);
+                    // If there was a place to bid on jobs, we would redirect there
+                    toast({
+                      title: "Apply For Job",
+                      description: "To apply for this job, please log in as a business account.",
+                    });
+                  }}
+                >
+                  Apply for this Job
+                </Button>
+                <Button variant="outline" onClick={() => setViewJobDetailsOpen(false)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Job Details Dialog */}
+      <Dialog open={editJobDetailsOpen} onOpenChange={setEditJobDetailsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Edit Job Details</DialogTitle>
+            <DialogDescription>
+              Update the information for your job posting
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedJob && (
+            <div className="space-y-4">
+              <div className="grid w-full items-center gap-1.5">
+                <h3 className="text-sm font-medium text-gray-900">Job Status</h3>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant={selectedJob.status === "open" ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateJobStatusMutation.mutate({ 
+                      jobId: selectedJob.id, 
+                      status: "open" 
+                    })}
+                    disabled={updateJobStatusMutation.isPending}
+                  >
+                    Open
+                  </Button>
+                  <Button 
+                    variant={selectedJob.status === "in_progress" ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateJobStatusMutation.mutate({ 
+                      jobId: selectedJob.id, 
+                      status: "in_progress" 
+                    })}
+                    disabled={updateJobStatusMutation.isPending}
+                  >
+                    In Progress
+                  </Button>
+                  <Button 
+                    variant={selectedJob.status === "completed" ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateJobStatusMutation.mutate({ 
+                      jobId: selectedJob.id, 
+                      status: "completed" 
+                    })}
+                    disabled={updateJobStatusMutation.isPending}
+                  >
+                    Completed
+                  </Button>
+                  <Button 
+                    variant={selectedJob.status === "cancelled" ? "destructive" : "outline"} 
+                    size="sm"
+                    onClick={() => updateJobStatusMutation.mutate({ 
+                      jobId: selectedJob.id, 
+                      status: "cancelled" 
+                    })}
+                    disabled={updateJobStatusMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditJobDetailsOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
