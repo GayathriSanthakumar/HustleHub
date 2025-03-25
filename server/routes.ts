@@ -539,6 +539,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Server error" });
     }
   });
+  
+  // Chat API endpoints
+  
+  // Get all conversations for the current user
+  app.get("/api/conversations", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const userType = req.user.userType;
+      
+      let conversations;
+      if (userType === "user") {
+        conversations = await storage.getConversationsByUser(userId);
+      } else if (userType === "business") {
+        conversations = await storage.getConversationsByBusiness(userId);
+      } else {
+        return res.status(400).json({ message: "Invalid user type" });
+      }
+      
+      // Get additional info for each conversation
+      const conversationsWithDetails = await Promise.all(
+        conversations.map(async (conversation) => {
+          // Get the other party's details
+          const otherUserId = userType === "user" ? conversation.businessId : conversation.userId;
+          const otherUser = await storage.getUser(otherUserId);
+          
+          // Get the item details
+          let item;
+          if (conversation.itemType === "job") {
+            item = await storage.getJob(conversation.itemId);
+          } else if (conversation.itemType === "product") {
+            item = await storage.getProduct(conversation.itemId);
+          }
+          
+          // Get unread message count for the current user
+          const unreadCount = await storage.getUnreadMessageCount(conversation.id, userId);
+          
+          return {
+            ...conversation,
+            otherUser: otherUser ? {
+              id: otherUser.id,
+              fullName: otherUser.fullName,
+              userType: otherUser.userType
+            } : null,
+            item: item ? {
+              id: item.id,
+              title: item.title || item.name,
+              type: conversation.itemType
+            } : null,
+            unreadCount
+          };
+        })
+      );
+      
+      // Sort by lastMessageAt in descending order (newest first)
+      conversationsWithDetails.sort((a, b) => 
+        new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+      );
+      
+      return res.status(200).json(conversationsWithDetails);
+    } catch (error) {
+      console.error("Error getting conversations:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Get or create conversation between user and business for an item
+  app.post("/api/conversations", isAuthenticated, async (req, res) => {
+    try {
+      const { businessId, userId, itemId, itemType } = req.body;
+      
+      // Validate required fields
+      if (!businessId || !userId || !itemId || !itemType) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Validate that the requesting user is one of the participants
+      const currentUserId = req.user.id;
+      if (currentUserId !== userId && currentUserId !== businessId) {
+        return res.status(403).json({ message: "Not authorized to create this conversation" });
+      }
+      
+      // Validate item type
+      if (itemType !== "job" && itemType !== "product") {
+        return res.status(400).json({ message: "Invalid item type" });
+      }
+      
+      // Check if conversation already exists
+      let conversation = await storage.getConversationByParticipants(userId, businessId, itemId, itemType);
+      
+      // If not, create a new conversation
+      if (!conversation) {
+        conversation = await storage.createConversation({
+          userId,
+          businessId,
+          itemId,
+          itemType
+        });
+      }
+      
+      return res.status(200).json(conversation);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Get messages for a specific conversation
+  app.get("/api/conversations/:id/messages", isAuthenticated, async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Verify the conversation exists
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      
+      // Verify the current user is a participant
+      if (conversation.userId !== userId && conversation.businessId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view these messages" });
+      }
+      
+      // Get messages for the conversation
+      const messages = await storage.getMessagesByConversation(conversationId);
+      
+      // Mark messages as read for the current user
+      await storage.markMessagesAsRead(conversationId, userId);
+      
+      return res.status(200).json(messages);
+    } catch (error) {
+      console.error("Error getting messages:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Send a message in a conversation
+  app.post("/api/conversations/:id/messages", isAuthenticated, async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      const { content } = req.body;
+      const senderId = req.user.id;
+      
+      // Validate required fields
+      if (!content) {
+        return res.status(400).json({ message: "Message content is required" });
+      }
+      
+      // Verify the conversation exists
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      
+      // Verify the current user is a participant
+      if (conversation.userId !== senderId && conversation.businessId !== senderId) {
+        return res.status(403).json({ message: "Not authorized to send messages in this conversation" });
+      }
+      
+      // Create the message
+      const message = await storage.createMessage({
+        conversationId,
+        senderId,
+        content,
+        readStatus: "unread"
+      });
+      
+      // Update the conversation's last message time
+      await storage.updateConversationLastMessageTime(conversationId);
+      
+      return res.status(201).json(message);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   app.get("/api/bids/item/:itemId/:itemType", async (req, res) => {
     try {

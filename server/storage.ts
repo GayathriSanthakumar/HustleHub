@@ -354,6 +354,116 @@ export class MemStorage implements IStorage {
     return updatedBid;
   }
 
+  // Chat conversation methods
+  async getConversation(id: number): Promise<Conversation | undefined> {
+    return this.conversations.get(id);
+  }
+
+  async getConversationByParticipants(
+    userId: number, 
+    businessId: number, 
+    itemId: number, 
+    itemType: string
+  ): Promise<Conversation | undefined> {
+    return Array.from(this.conversations.values()).find(
+      (conversation) => 
+        conversation.userId === userId &&
+        conversation.businessId === businessId &&
+        conversation.itemId === itemId &&
+        conversation.itemType === itemType
+    );
+  }
+
+  async getConversationsByUser(userId: number): Promise<Conversation[]> {
+    return Array.from(this.conversations.values()).filter(
+      (conversation) => conversation.userId === userId
+    );
+  }
+
+  async getConversationsByBusiness(businessId: number): Promise<Conversation[]> {
+    return Array.from(this.conversations.values()).filter(
+      (conversation) => conversation.businessId === businessId
+    );
+  }
+
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    const id = this.conversationId++;
+    const newConversation: Conversation = {
+      ...conversation,
+      id,
+      createdAt: new Date(),
+      lastMessageAt: new Date()
+    };
+    this.conversations.set(id, newConversation);
+    return newConversation;
+  }
+
+  async updateConversationLastMessageTime(id: number): Promise<Conversation | undefined> {
+    const conversation = this.conversations.get(id);
+    if (!conversation) return undefined;
+
+    const updatedConversation = { 
+      ...conversation, 
+      lastMessageAt: new Date() 
+    };
+    this.conversations.set(id, updatedConversation);
+    return updatedConversation;
+  }
+
+  // Chat message methods
+  async getMessagesByConversation(conversationId: number): Promise<Message[]> {
+    return Array.from(this.messages.values())
+      .filter((message) => message.conversationId === conversationId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async getMessage(id: number): Promise<Message | undefined> {
+    return this.messages.get(id);
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const id = this.messageId++;
+    const newMessage: Message = {
+      ...message,
+      id,
+      createdAt: new Date()
+    };
+    this.messages.set(id, newMessage);
+    
+    // Update the conversation's last message time
+    this.updateConversationLastMessageTime(message.conversationId);
+    
+    return newMessage;
+  }
+
+  async markMessagesAsRead(conversationId: number, userId: number): Promise<boolean> {
+    let success = false;
+    
+    const messagesToUpdate = Array.from(this.messages.values()).filter(
+      (message) => 
+        message.conversationId === conversationId && 
+        message.senderId !== userId && 
+        message.readStatus === "unread"
+    );
+    
+    for (const message of messagesToUpdate) {
+      const updatedMessage = { ...message, readStatus: "read" as const };
+      this.messages.set(message.id, updatedMessage);
+      success = true;
+    }
+    
+    return success;
+  }
+
+  async getUnreadMessageCount(conversationId: number, userId: number): Promise<number> {
+    return Array.from(this.messages.values()).filter(
+      (message) => 
+        message.conversationId === conversationId && 
+        message.senderId !== userId && 
+        message.readStatus === "unread"
+    ).length;
+  }
+
   // Seed some initial data
   private seedData() {
     // This method intentionally left empty as we should not mock data in production
