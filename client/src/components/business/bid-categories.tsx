@@ -241,16 +241,26 @@ export function BidCategories() {
                             <div className="mt-2 flex items-center justify-between">
                               <div className="flex items-center text-sm text-amber-600">
                                 <AlertCircle className="h-4 w-4 mr-1" />
-                                Bid was rejected
+                                Bid was rejected by client
                               </div>
                               <Button
-                                variant="outline"
+                                variant="secondary"
                                 size="sm"
                                 onClick={() => handleReviveBid(bid)}
                                 className="text-xs h-8"
                               >
                                 Submit New Offer
                               </Button>
+                            </div>
+                          )}
+                          
+                          {/* Show when post is completed - no revival possible */}
+                          {bid.status === "rejected" && !bid.replacedBy && isPostCompleted && (
+                            <div className="mt-2">
+                              <div className="flex items-center text-sm text-gray-500">
+                                <AlertCircle className="h-4 w-4 mr-1" />
+                                Post is completed. Cannot submit new offer.
+                              </div>
                             </div>
                           )}
                         </div>

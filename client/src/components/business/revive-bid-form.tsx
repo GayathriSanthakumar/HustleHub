@@ -144,12 +144,21 @@ export function ReviveBidForm({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Improve Your Bid</DialogTitle>
+          <DialogTitle>
+            {originalBid?.replacedBy ? "Improve Your Bid" : "Submit New Offer"}
+          </DialogTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            {originalBid?.replacedBy 
+              ? "Your bid was replaced by a lower offer. You can improve your bid to compete." 
+              : "Your bid was rejected. You can submit a new offer with better terms."}
+          </p>
         </DialogHeader>
         
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-3">
-            <Badge variant="secondary">Replaced Bid</Badge>
+            <Badge variant={originalBid?.replacedBy ? "destructive" : "secondary"}>
+              {originalBid?.replacedBy ? "Replaced Bid" : "Rejected Bid"}
+            </Badge>
             <p className="text-sm text-gray-500">#{bidId}</p>
           </div>
           
@@ -167,6 +176,15 @@ export function ReviveBidForm({
               </div>
               {originalBid?.details && (
                 <p className="text-sm text-gray-600 mt-2">{originalBid.details}</p>
+              )}
+              
+              {originalBid?.replacedBy && (
+                <div className="mt-4 py-2 px-3 bg-red-50 border border-red-100 rounded-md">
+                  <p className="text-sm text-red-600 flex items-center">
+                    <AlertTriangle className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span>This bid was replaced by a lower bid from another business</span>
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -280,7 +298,7 @@ export function ReviveBidForm({
                       Submitting...
                     </>
                   ) : (
-                    "Submit Improved Bid"
+                    originalBid?.replacedBy ? "Submit Improved Bid" : "Submit New Offer"
                   )}
                 </Button>
               </div>
