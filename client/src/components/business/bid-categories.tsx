@@ -72,14 +72,23 @@ export function BidCategories() {
     return bids;
   };
 
-  // Get item name from its ID
-  const getItemName = (itemId: number, itemType: string) => {
+  // Get item name and status from its ID
+  const getItemInfo = (itemId: number, itemType: string) => {
     if (itemType === "product" && products) {
       const product = products.find((p: any) => p.id === itemId);
-      return product ? product.name : `Item #${itemId}`;
+      return product ? {
+        name: product.name,
+        status: product.status
+      } : {
+        name: `Item #${itemId}`,
+        status: "unknown"
+      };
     }
     
-    return `Item #${itemId}`;
+    return {
+      name: `Item #${itemId}`,
+      status: "unknown"
+    };
   };
 
   // Handle opening the revive bid modal
@@ -122,16 +131,28 @@ export function BidCategories() {
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
                 <ul className="divide-y divide-gray-200">
                   {filteredBids.map((bid: any) => {
-                    const itemName = getItemName(bid.itemId, bid.itemType);
+                    const itemInfo = getItemInfo(bid.itemId, bid.itemType);
                     const statusBadge = getBidStatusBadge(bid.status);
+                    const isPostCompleted = itemInfo.status === "completed";
+                    const itemName = itemInfo.name;
                     
                     return (
-                      <li key={bid.id} className={bid.status === "rejected" && bid.replacedBy ? "bg-red-50" : ""}>
+                      <li key={bid.id} className={
+                        isPostCompleted ? "bg-gray-50" : 
+                        bid.status === "rejected" && bid.replacedBy ? "bg-red-50" : ""
+                      }>
                         <div className="px-4 py-4 sm:px-6">
                           <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-medium text-primary truncate">
-                              {itemName} ({bid.itemType})
-                            </h3>
+                            <div className="flex items-center">
+                              <h3 className="text-sm font-medium text-primary truncate">
+                                {itemInfo.name} ({bid.itemType})
+                              </h3>
+                              {isPostCompleted && (
+                                <Badge variant="outline" className="ml-2 text-xs">
+                                  Post Completed
+                                </Badge>
+                              )}
+                            </div>
                             <div className="ml-2 flex-shrink-0 flex">
                               <Badge variant={statusBadge.variant}>
                                 {statusBadge.label}

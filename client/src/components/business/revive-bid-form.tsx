@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Clock, IndianRupee } from "lucide-react";
+import { RefreshCw, Clock, IndianRupee, XCircle, AlertTriangle } from "lucide-react";
 
 // Form schema with validation
 const reviveBidSchema = z.object({
@@ -49,6 +49,35 @@ export function ReviveBidForm({
 }: ReviveBidFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isPostCompleted, setIsPostCompleted] = useState(false);
+
+  // Fetch the item's status to check if it's completed
+  const { data: itemData, isLoading: itemLoading } = useQuery({
+    queryKey: [
+      originalBid?.itemType === "product" ? "/api/products" : "/api/jobs", 
+      originalBid?.itemId
+    ],
+    queryFn: async () => {
+      if (!originalBid) return null;
+      const endpoint = originalBid?.itemType === "product" 
+        ? `/api/products/${originalBid.itemId}` 
+        : `/api/jobs/${originalBid.itemId}`;
+      
+      const response = await apiRequest("GET", endpoint);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!originalBid && isOpen
+  });
+
+  // Check if the post is completed
+  useEffect(() => {
+    if (itemData && itemData.status === "completed") {
+      setIsPostCompleted(true);
+    } else {
+      setIsPostCompleted(false);
+    }
+  }, [itemData]);
 
   // Initialize form with default values
   const form = useForm<ReviveBidValues>({
@@ -99,6 +128,15 @@ export function ReviveBidForm({
 
   // Handle form submission
   function onSubmit(values: ReviveBidValues) {
+    if (isPostCompleted) {
+      toast({
+        title: "Cannot Update Bid",
+        description: "This post has been marked as completed and is no longer accepting bids.",
+        variant: "destructive",
+      });
+      onClose();
+      return;
+    }
     reviveBidMutation.mutate(values);
   }
 
@@ -134,92 +172,121 @@ export function ReviveBidForm({
           </Card>
         </div>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount (₹)</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                        ₹
-                      </span>
-                      <Input
-                        type="number"
-                        placeholder="Enter bid amount"
-                        className="pl-8"
-                        {...field}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {isPostCompleted ? (
+          <div className="mb-6">
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6 flex items-start gap-3">
+                <XCircle className="h-6 w-6 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-base font-medium text-red-700">Post Completed</h3>
+                  <p className="text-sm text-red-600 mt-1">
+                    This post has been marked as completed and is no longer accepting bids. You cannot update your bid at this time.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
             
-            <FormField
-              control={form.control}
-              name="deliveryTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Delivery Time</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., 3 days, 1 week"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Details</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe why your bid is better"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end mt-6">
               <Button
                 type="button"
-                variant="outline"
                 onClick={onClose}
-                disabled={reviveBidMutation.isPending}
               >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={reviveBidMutation.isPending}
-              >
-                {reviveBidMutation.isPending ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  "Submit Improved Bid"
-                )}
+                Close
               </Button>
             </div>
-          </form>
-        </Form>
+          </div>
+        ) : itemLoading ? (
+          <div className="flex justify-center p-8">
+            <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount (₹)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                          ₹
+                        </span>
+                        <Input
+                          type="number"
+                          placeholder="Enter bid amount"
+                          className="pl-8"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="deliveryTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Delivery Time</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., 3 days, 1 week"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="details"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Additional Details</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe why your bid is better"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onClose}
+                  disabled={reviveBidMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={reviveBidMutation.isPending}
+                >
+                  {reviveBidMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Improved Bid"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );

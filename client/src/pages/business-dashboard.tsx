@@ -280,18 +280,30 @@ export default function BusinessDashboard() {
                     <h3 className="text-lg font-medium text-gray-900">{request.name}</h3>
                     <p className="mt-2 text-sm text-gray-600 line-clamp-3">{request.description}</p>
                     <div className="mt-4 flex justify-between items-center">
-                      <Badge variant={request.status === "open" ? "success" : "secondary"}>
-                        {request.status === "open" ? "Open for Bids" : request.status}
+                      <Badge variant={
+                        request.status === "open" ? "success" : 
+                        request.status === "completed" ? "outline" : 
+                        "secondary"
+                      }>
+                        {
+                          request.status === "open" ? "Open for Bids" : 
+                          request.status === "in_progress" ? "In Progress" :
+                          request.status === "completed" ? "Completed" :
+                          request.status
+                        }
                       </Badge>
-                      {request.status === "open" && (
+                      {(request.status === "open" || request.status === "in_progress") ? (
                         <Button 
                           size="sm"
                           onClick={() => handleBidClick(request)}
-                          disabled={request.status !== "open"}
                         >
                           Place Bid
                         </Button>
-                      )}
+                      ) : request.status === "completed" ? (
+                        <Badge variant="outline" className="text-gray-500">
+                          Bidding Closed
+                        </Badge>
+                      ) : null}
                     </div>
                   </CardContent>
                 </Card>
