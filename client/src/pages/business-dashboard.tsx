@@ -90,13 +90,25 @@ export default function BusinessDashboard() {
   });
 
   // Load user product requests
-  const { data: userRequests, isLoading: requestsLoading } = useQuery({
+  const { data: userProducts, isLoading: productsRequestsLoading } = useQuery({
     queryKey: ["/api/products"],
     queryFn: async () => {
       const response = await fetch("/api/products", {
         credentials: "include"
       });
       if (!response.ok) throw new Error("Failed to fetch product requests");
+      return response.json();
+    }
+  });
+  
+  // Load user job requests
+  const { data: userJobs, isLoading: jobsRequestsLoading } = useQuery({
+    queryKey: ["/api/jobs"],
+    queryFn: async () => {
+      const response = await fetch("/api/jobs", {
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error("Failed to fetch job requests");
       return response.json();
     }
   });
@@ -125,11 +137,24 @@ export default function BusinessDashboard() {
     });
   };
 
-  // Filter user requests based on search query
-  const filteredRequests = userRequests ? userRequests.filter(request => 
-    request.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    request.description.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter user products based on search query
+  const filteredProducts = userProducts ? userProducts.filter(product => 
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    product.description.toLowerCase().includes(searchQuery.toLowerCase())
   ) : [];
+  
+  // Filter user jobs based on search query
+  const filteredJobs = userJobs ? userJobs.filter(job => 
+    job.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    job.description.toLowerCase().includes(searchQuery.toLowerCase())
+  ) : [];
+  
+  // Check if there are any requests (either jobs or products)
+  const hasRequests = (filteredProducts && filteredProducts.length > 0) || 
+                     (filteredJobs && filteredJobs.length > 0);
+                     
+  // Combined loading state
+  const requestsLoading = productsRequestsLoading || jobsRequestsLoading;
 
   // Open bid modal for a product
   const handleBidClick = (item: any) => {
