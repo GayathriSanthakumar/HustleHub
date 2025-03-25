@@ -1,8 +1,9 @@
-import { users, businessDetails, jobs, products, businessProducts, bids } from "@shared/schema";
+import { users, businessDetails, jobs, products, businessProducts, bids, conversations, messages } from "@shared/schema";
 import type { 
   User, InsertUser, BusinessDetails, InsertBusinessDetails, 
   Job, InsertJob, Product, InsertProduct, 
-  BusinessProduct, InsertBusinessProduct, Bid, InsertBid 
+  BusinessProduct, InsertBusinessProduct, Bid, InsertBid,
+  Conversation, InsertConversation, Message, InsertMessage
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -52,6 +53,21 @@ export interface IStorage {
   createBid(bid: InsertBid, businessId: number): Promise<Bid>;
   updateBidStatus(id: number, status: string, replacedBy?: number): Promise<Bid | undefined>;
   reviveBid(id: number, newBidData: Partial<InsertBid>): Promise<Bid | undefined>;
+  
+  // Chat conversations methods
+  getConversation(id: number): Promise<Conversation | undefined>;
+  getConversationByParticipants(userId: number, businessId: number, itemId: number, itemType: string): Promise<Conversation | undefined>;
+  getConversationsByUser(userId: number): Promise<Conversation[]>;
+  getConversationsByBusiness(businessId: number): Promise<Conversation[]>;
+  createConversation(conversation: InsertConversation): Promise<Conversation>;
+  updateConversationLastMessageTime(id: number): Promise<Conversation | undefined>;
+  
+  // Chat messages methods
+  getMessagesByConversation(conversationId: number): Promise<Message[]>;
+  getMessage(id: number): Promise<Message | undefined>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  markMessagesAsRead(conversationId: number, userId: number): Promise<boolean>;
+  getUnreadMessageCount(conversationId: number, userId: number): Promise<number>;
 
   // Session store
   sessionStore: session.SessionStore;
@@ -64,12 +80,16 @@ export class MemStorage implements IStorage {
   private products: Map<number, Product>;
   private businessProducts: Map<number, BusinessProduct>;
   private bids: Map<number, Bid>;
+  private conversations: Map<number, Conversation>;
+  private messages: Map<number, Message>;
   private userId: number;
   private businessDetailsId: number;
   private jobId: number;
   private productId: number;
   private businessProductId: number;
   private bidId: number;
+  private conversationId: number;
+  private messageId: number;
   sessionStore: session.SessionStore;
 
   constructor() {
@@ -79,12 +99,16 @@ export class MemStorage implements IStorage {
     this.products = new Map();
     this.businessProducts = new Map();
     this.bids = new Map();
+    this.conversations = new Map();
+    this.messages = new Map();
     this.userId = 1;
     this.businessDetailsId = 1;
     this.jobId = 1;
     this.productId = 1;
     this.businessProductId = 1;
     this.bidId = 1;
+    this.conversationId = 1;
+    this.messageId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // Clear expired sessions every 24h
     });

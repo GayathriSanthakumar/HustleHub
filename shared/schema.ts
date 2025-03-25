@@ -14,6 +14,9 @@ export const itemStatuses = ["open", "in_progress", "completed", "cancelled"] as
 // Status for bids: 'pending', 'accepted', 'rejected'
 export const bidStatuses = ["pending", "accepted", "rejected"] as const;
 
+// Status for messages: 'read', 'unread'
+export const messageReadStatus = ["read", "unread"] as const;
+
 // Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -89,6 +92,28 @@ export const bids = pgTable("bids", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Chat conversations table
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  businessId: integer("business_id").notNull().references(() => users.id),
+  itemId: integer("item_id").notNull(), // Can be a job_id, product_id, or bid_id
+  itemType: text("item_type").notNull(), // "job", "product", or "bid"
+  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Chat messages table
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  status: text("status", { enum: messageReadStatus }).notNull().default("unread"),
+  imagePath: text("image_path"), // Optional image attachment
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Schema for user registration and insert
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true })
@@ -139,6 +164,20 @@ export const insertBidSchema = createInsertSchema(bids).omit({
   createdAt: true 
 });
 
+// Schema for conversation creation
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  lastMessageAt: true
+});
+
+// Schema for message creation
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  status: true,
+  createdAt: true
+});
+
 // Export types
 export type InsertUser = Omit<z.infer<typeof insertUserSchema>, "confirmPassword">;
 export type User = typeof users.$inferSelect;
@@ -152,3 +191,7 @@ export type BusinessProduct = typeof businessProducts.$inferSelect;
 export type InsertBusinessProduct = z.infer<typeof insertBusinessProductSchema>;
 export type Bid = typeof bids.$inferSelect;
 export type InsertBid = z.infer<typeof insertBidSchema>;
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
