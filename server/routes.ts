@@ -554,8 +554,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!product) {
           return res.status(404).json({ message: "Product not found" });
         }
-        if (product.status !== "open") {
-          return res.status(400).json({ message: "Product is not open for bids" });
+        // Only allow bids if the product is open or in_progress
+        if (product.status !== "open" && product.status !== "in_progress") {
+          return res.status(400).json({ message: "Product is not accepting bids anymore" });
         }
       } else {
         return res.status(400).json({ message: "Invalid item type" });
