@@ -174,7 +174,7 @@ export default function BusinessDashboard() {
   };
 
   // Get user ID from the API
-  const { data: userData } = useQuery({
+  const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ["/api/user"],
     queryFn: async () => {
       const response = await fetch("/api/user", {
