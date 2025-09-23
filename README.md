@@ -48,12 +48,11 @@ Review & Rating System: Users and businesses can rate and review each other.
 
 # TECHSTACK
 
-Frontend: React.js, Tailwind CSS
-● Backend: Appwrite, Node.js
-● Database: Appwrite, PostGreSQL
-● Security: Appwrite Auth
-● Deployment: Appwrite Cloud, Vercel
-● Development: VS Code, Appwrite Console
+● Frontend: React.js, Tailwind CSS
+● Backend: Node.js
+● Database: PostGreSQL
+● Deployment: Vercel
+● Development: VS Code,Cursor
 
 
 # FUTURE IMPLEMENTATIONS
