@@ -9,6 +9,7 @@ import UserRegisterPage from "@/pages/user-register";
 import BusinessLoginPage from "@/pages/business-login";
 import BusinessRegisterPage from "@/pages/business-register";
 import UserDashboard from "@/pages/user-dashboard";
+import UserHistory from "@/pages/user-history";
 import BusinessDashboard from "@/pages/business-dashboard";
 import HomePage from "@/pages/home-page";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -29,6 +30,10 @@ function Router() {
       {/* Protected routes - User dashboard */}
       <Route path="/user-dashboard">
         <ProtectedRoute userType="user" component={UserDashboard} />
+      </Route>
+      
+      <Route path="/user-history">
+        <ProtectedRoute userType="user" component={UserHistory} />
       </Route>
       
       {/* Protected routes - Business dashboard */}

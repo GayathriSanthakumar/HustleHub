@@ -63,17 +63,9 @@ export default function UserDashboard() {
   const [endPostDialogOpen, setEndPostDialogOpen] = useState<boolean>(false);
   const [productToEnd, setProductToEnd] = useState<number | null>(null);
 
-  // Base path mapping
-  const tabPaths = {
-    "service-accept": "/user-dashboard",
-    "service-post": "/user-dashboard/service-post",
-    "product": "/user-dashboard/product"
-  };
-
   // Determine active tab based on current path
   const getInitialTab = () => {
-    if (location === "/user-dashboard/service-post") return "service-post";
-    if (location === "/user-dashboard/product") return "product";
+    // Default to service-accept tab
     return "service-accept";
   };
 

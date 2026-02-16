@@ -11,6 +11,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  LayoutDashboard,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -33,22 +35,16 @@ export function DashboardLayout({ children, title, userType }: DashboardLayoutPr
   // Define navigation items based on user type
   const userNavItems = [
     {
-      title: "Service Accept",
+      title: "Dashboard",
       href: "/user-dashboard",
-      icon: <Package className="h-5 w-5 mr-2" />,
-      active: location === "/user-dashboard",
+      icon: <LayoutDashboard className="h-5 w-5 mr-2" />,
+      active: location === "/user-dashboard" || location.startsWith("/user-dashboard/"),
     },
     {
-      title: "Service Post",
-      href: "/user-dashboard/service-post",
-      icon: <Briefcase className="h-5 w-5 mr-2" />,
-      active: location === "/user-dashboard/service-post",
-    },
-    {
-      title: "Product",
-      href: "/user-dashboard/product",
-      icon: <Package className="h-5 w-5 mr-2" />,
-      active: location === "/user-dashboard/product",
+      title: "History",
+      href: "/user-history",
+      icon: <History className="h-5 w-5 mr-2" />,
+      active: location === "/user-history",
     },
   ];
 
