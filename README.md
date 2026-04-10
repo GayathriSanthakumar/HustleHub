@@ -1,81 +1,35 @@
-# HUSTLEHUB
-HustleHub is a dual-purpose platform that connects local vendors with customers and helps
-students/professionals find short-term gig jobs. It ensures fair pay with its AI - powered minimum wage feature. It offers location-based vendor discovery, a
-dynamic bidding system for better deals, and blockchain-backed verification for trust and
-transparency.
-# FEATURES
+# HustleHub
 
-User Account:
+HustleHub is a platform that connects local vendors with customers and helps students/professionals find short-term gigs. It combines real-time bidding, AI-powered fair pricing, and verified interactions in one system.
 
-Register and log in as a user.
-Post service requests and product requests.
-Receive and review quotations from businesses.
-Accept or reject offers and interact with businesses.
-View applied service providers and their contact details.
-Track Recent Activities categorized as:
+---
 
-Job Posts: Services requested by users.
-Job Accepts: Accepted service providers.
-Product Posts: Products requested and bid details.
+## ✨ Features
+- 👤 User & Business accounts  
+- 📍 Location-based vendor discovery  
+- 💰 Real-time bidding with dynamic price updates  
+- 🤖 AI-powered fair pay system  
+- 🔔 Notifications for bids and job updates  
+- ⭐ Review & rating system  
 
-Business Account:
+---
 
-Register and log in as a business.
-Post product requests and manage quotations.
-Submit bids on product requests.
-Accept service jobs and interact with users.
-Manage quotations with dynamic lowest price updates.
-View user product requests and bid history.
-Maintain a Business Dashboard with:
+## ⚙️ Core Functionality
+- Post service and product requests  
+- Businesses submit and manage bids  
+- Users accept multiple service providers  
+- Dashboard to track jobs, bids, and activity  
 
-User product requests
-Submitted bids with images
-Updates on accepted bids
+---
 
-# CORE FUNCTIONALITIES
+## 🏗️ Tech Stack
+React.js • Node.js • PostgreSQL • Tailwind CSS • Vercel  
 
-Dynamic Price Updates: Real-time updates on lowest bid prices.
-Service Accept: Businesses can accept services and view job details with contact info.
-Multiple Job Acceptances: Users can accept multiple service providers.
-Edit & View Posts: Modify and track applied users and contact details.
-Quotation Listings: Businesses can list their quotations and view real-time updates.
-UI Enhancements: Icons and buttons for better navigation.
-Secure Authentication: Session-based login for users and businesses.
-Automated Matching System: AI-based recommendations for product/service matching.
-Push Notifications: Real-time updates on new bids, accepted jobs, and user interactions.
-Payment Gateway Integration: Secure transactions between users and businesses.
-Review & Rating System: Users and businesses can rate and review each other.
+---
 
-# TECHSTACK
-
-● Frontend: React.js, Tailwind CSS
-● Backend: Node.js
-● Database: PostGreSQL
-● Deployment: Vercel
-● Development: VS Code,Cursor
-
-
-# FUTURE IMPLEMENTATIONS
-
-Implement AI-driven recommendations for product/service matching.
-Introduce payment integration for business transactions.
-Enhance UI/UX for better user experience.
-Develop a mobile-friendly version using React Native.
-Improve security with OAuth authentication.
-Add analytics for tracking user and business engagement.
-
-# SECURITY MEASURES
-
-Data Encryption: Secure storage of user and business data.
-Role-Based Access Control (RBAC): Restrict user and business access to relevant features.
-Session Management: Secure session handling to prevent unauthorized access.
-DDoS Protection: Implement rate limiting and security measures against attacks.
-OAuth Authentication: Future implementation for enhanced login security.
-
-
-
-
-
-
-
-
+## 👥 Team
+- Gayathri S — Backend & API Engineering
+- Rupica K — Frontend Engineering & UI/UX  
+- Manoj Kumar — AI/ML & Data Systems
+- Faiyaz H - Integration, Deployment & Testing
+  
