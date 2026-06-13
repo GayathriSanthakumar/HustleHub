@@ -28,7 +28,7 @@ React.js • Node.js • PostgreSQL • Tailwind CSS • Vercel
 ---
 
 ## 👥 Team
-- Gayathri S — Backend & API Engineering
+- Gayathri S — frontend & API Engineering
 - Rupica K — Frontend Engineering & UI/UX  
 - Manoj Kumar — AI/ML & Data Systems
 - Faiyaz H - Integration, Deployment & Testing
