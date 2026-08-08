@@ -1,6 +1,6 @@
 # HustleHub
 
-HustleHub is a platform that connects local vendors with customers and helps students/professionals find short-term gigs. It combines real-time bidding, AI-powered fair pricing, and verified interactions in one system.
+HustleHub is a platform that connects local vendors with customers and helps students/professionals find short-term gigs. It combines real-time bidding, AI-powered fair pricing, and interactions in one system.
 
 ---
 
